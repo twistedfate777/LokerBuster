@@ -1,4 +1,4 @@
-import { Briefcase, MenuIcon, SearchAlert, Users } from "lucide-react";
+import { MenuIcon, SearchAlert, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,8 +10,6 @@ import {
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import githubLogo from "../assets/github-logo.jpg";
-import githubLogoDark from "../assets/github-logo-dark.png";
 
 function MobileNavbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -44,9 +42,9 @@ function MobileNavbar() {
               className="flex items-center gap-3 justify-start"
               asChild
             >
-              <Link to="/jobs" onClick={() => setShowMobileMenu(false)}>
-                <Briefcase className="w-4 h-4" />
-                Jobs
+              <Link to={user ? "/test" : "/login"} onClick={() => setShowMobileMenu(false)}>
+                <SearchAlert className="w-4 h-4" />
+                Scan
               </Link>
             </Button>
             <Button
@@ -59,66 +57,15 @@ function MobileNavbar() {
                 Community
               </Link>
             </Button>
-            <Button
-              variant="ghost"
-              className="flex items-center gap-3 justify-start"
-              asChild
-            >
-              <Link to={"https://github.com/twistedfate777/LokerBuster-Frontend"} onClick={() => setShowMobileMenu(false)}>
-                <div className="w-4 h-4 rounded-full">
-                  <img src={githubLogo} className="w-4 h-4 rounded-full" />
-                </div>
-                <span className="justify-center cursor-pointer">
-                  Frontend
-                </span>
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex items-center gap-3 justify-start"
-              asChild
-            >
-              <Link to={"https://github.com/renhartoz/LokerBuster"} onClick={() => setShowMobileMenu(false)}>
-                <div className="w-4 h-4 rounded-full">
-                  <img src={githubLogoDark} className="w-4 h-4 rounded-full" />
-                </div>
-                <span className="justify-center cursor-pointer">
-                  Backend
-                </span>
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              className="flex items-center gap-3 justify-start"
-              asChild
-            >
-              <Link to="/jobs" onClick={() => setShowMobileMenu(false)}>
-                <Briefcase className="w-4 h-4" />
-                Jobs
-              </Link>
-            </Button>
             {user ? (
-              <>
+              <div className="flex items-center justify-center">
                 <Button
-                  variant="ghost"
-                  className="flex items-center gap-3 justify-start"
-                  asChild
+                  className="min-w-[100px] cursor-pointer"
+                  onClick={handleLogout}
                 >
-                  <Link to="/test" onClick={() => setShowMobileMenu(false)}>
-                    <SearchAlert className="w-4 h-4" />
-                    Test
-                  </Link>
+                  Logout
                 </Button>
-
-                <div className="flex items-center justify-center">
-                  <Button
-                    className="min-w-[100px] cursor-pointer"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </Button>
-                </div>
-              </>
+              </div>
             ) : (
               <div className="flex items-center justify-center">
                 <Button className="min-w-[100px] cursor-pointer" asChild>

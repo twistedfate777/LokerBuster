@@ -1,18 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Briefcase, SearchAlert, Users } from "lucide-react";
+import { SearchAlert, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MobileNavbar from "./MobileNavbar";
 import { useAuth } from "@/context/AuthContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-
-import githubLogo from '../assets/github-logo.jpg'
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -38,41 +28,14 @@ function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center space-x-4 items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="flex justify-center">
-               <Button variant="ghost" className="flex items-center justify-center gap-2 px-2 py-2" asChild>
-                <div className=" flex items-center">
-                  <div className="w-4 h-4 rounded-full">
-                  <img src={githubLogo} className="w-4 h-4 rounded-full"/>
-                </div>
-                <span className="hidden lg:flex justify-center cursor-pointer">Github Links</span>
-                </div>
-                
-               </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem>
-                    <Link
-                      to={
-                        "https://github.com/twistedfate777/LokerBuster-Frontend"
-                      }
-                    >
-                      Frontend
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link to={"https://github.com/renhartoz/LokerBuster"}>
-                      Backend
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="ghost" className="flex items-center gap-2" asChild>
-              <Link to="/jobs">
-                <Briefcase className="w-4 h-4" />
-                <span className="hidden lg:inline">Jobs</span>
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2"
+              asChild
+            >
+              <Link to={user ? "/test" : "/login"}>
+                <SearchAlert className="w-4 h-4" />
+                <span className="hidden lg:inline">Scan</span>
               </Link>
             </Button>
             <Button variant="ghost" className="flex items-center gap-2" asChild>
@@ -83,16 +46,6 @@ function Navbar() {
             </Button>
             {user ? (
               <>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                  asChild
-                >
-                  <Link to="/test">
-                    <SearchAlert className="w-4 h-4" />
-                    <span className="hidden lg:inline">Test</span>
-                  </Link>
-                </Button>
                 <span className="text-sm text-muted-foreground">
                   {user.username}
                 </span>

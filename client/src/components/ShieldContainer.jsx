@@ -16,8 +16,8 @@ const InteractiveScene = () => {
 
 
     if (isHovered) {
-      targetX = -state.pointer.y * 0.5; 
-      targetY = state.pointer.x * 0.5; 
+      targetX = -state.pointer.y * 0.5;
+      targetY = state.pointer.x * 0.5;
 
 
       targetX = THREE.MathUtils.clamp(targetX, -Math.PI / 6, Math.PI / 6);
@@ -58,7 +58,7 @@ export default function ShieldContainer() {
         <InteractiveScene />
 
         <Environment preset="city" />
-        
+
         <OrbitControls
           enableZoom={false}
           enablePan={false}
