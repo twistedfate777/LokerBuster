@@ -2,12 +2,25 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import api from "@/lib/api";
 
 const AuthContext = createContext(null);
+const DEMO_USER_STORAGE_KEY = "lokerbuster_demo_user";
+const DEMO_USER = {
+  id: "demo-user",
+  username: "Demo User",
+  email: "demo@lokerbuster.local",
+  isDemo: true,
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = useCallback(async () => {
+    if (localStorage.getItem(DEMO_USER_STORAGE_KEY) === "true") {
+      setUser(DEMO_USER);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await api.get("/auth/me/");
       setUser(res.data.data);
@@ -34,17 +47,25 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
+  const bypassLogin = () => {
+    localStorage.setItem(DEMO_USER_STORAGE_KEY, "true");
+    setUser(DEMO_USER);
+  };
+
   const logout = async () => {
     try {
-      await api.post("/auth/logout/");
+      if (!user?.isDemo) {
+        await api.post("/auth/logout/");
+      }
     } catch {
     } finally {
+      localStorage.removeItem(DEMO_USER_STORAGE_KEY);
       setUser(null);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, bypassLogin, logout, fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,7 +4,62 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldGroup, FieldLabel } from "@/components/ui/field";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
+
+const getErrorMessage = (value) => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(getErrorMessage).filter(Boolean).join(" ");
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value).map(getErrorMessage).filter(Boolean).join(" ");
+  }
+
+  return "";
+};
+
+const getRegisterError = (error) => {
+  if (!error?.response) {
+    return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
+  }
+
+  const { status, statusText, data } = error.response;
+
+  if (status === 409) {
+    return "Email atau username sudah digunakan.";
+  }
+
+  if (status === 429) {
+    return "Terlalu banyak percobaan. Silakan coba lagi nanti.";
+  }
+
+  if (status >= 500) {
+    return "Terjadi gangguan pada server. Silakan coba lagi nanti.";
+  }
+
+  const errorData = data?.error ?? data;
+  const message = [
+    errorData?.message,
+    errorData?.detail,
+    errorData?.error_description,
+    errorData?.errors,
+    errorData?.non_field_errors,
+    errorData,
+  ]
+    .map(getErrorMessage)
+    .find(Boolean);
+
+  if (message) {
+    return message;
+  }
+
+  const statusDescription = statusText ? `: ${statusText}` : "";
+  return `Registrasi gagal (HTTP ${status}${statusDescription}). Periksa data Anda lalu coba lagi.`;
+};
 
 function Register() {
   const { register } = useAuth();
@@ -19,16 +74,27 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!email.trim() || !username.trim() || !password || !confirmPassword) {
+      setError("Semua field wajib diisi.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password minimal harus 8 karakter.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Password tidak sama.");
       return;
     }
     setLoading(true);
     try {
-      await register(email, username, password);
+      await register(email.trim(), username.trim(), password);
       navigate("/test");
     } catch (err) {
-      setError(err.response?.data?.error?.message || "Registrasi gagal.");
+      setError(getRegisterError(err));
     } finally {
       setLoading(false);
     }
@@ -37,7 +103,7 @@ function Register() {
   return (
     <section className="py-12 sm:py-24 h-full mx-auto w-full max-w-screen-xl px-4 md:px-20 flex">
       <div className="flex flex-col w-full justify-center items-center">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -100 }}
           animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
           className="px-2"
@@ -48,8 +114,8 @@ function Register() {
           <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-gray-900 bg-[#1ecfc1] flex flex-col gap-2 mb-12 sm:mb-20 px-2">
             Create your account.
           </h2>
-        </motion.div>
-        <motion.form
+        </Motion.div>
+        <Motion.form
           className="w-full flex flex-col max-w-[600px] justify-center items-center px-4 sm:px-10 border rounded-lg pb-10 sm:pb-14 pt-10 sm:pt-14 gap-8 sm:gap-10"
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
@@ -59,7 +125,10 @@ function Register() {
             Register
           </h1>
           {error && (
-            <div className="w-full rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center">
+            <div
+              role="alert"
+              className="w-full rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center"
+            >
               {error}
             </div>
           )}
@@ -134,7 +203,7 @@ function Register() {
               </Link>
             </p>
           </FieldGroup>
-        </motion.form>
+        </Motion.form>
       </div>
     </section>
   );
