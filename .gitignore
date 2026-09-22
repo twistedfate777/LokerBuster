@@ -1,0 +1,24 @@
+# Agent skills and lockfiles
+.agents/
+skills-lock.json
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env*.local
+
+# Build output
+dist/
+dist-ssr/
+
+# Logs
+*.log
+npm-debug.log*
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

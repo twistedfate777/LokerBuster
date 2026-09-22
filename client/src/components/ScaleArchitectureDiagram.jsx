@@ -337,7 +337,7 @@ const DiagramPlane = ({ hoverObject }) => {
 
 export default function ScaleArchitectureDiagram({ hoverObject }) {
   return (
-    <div className="w-full h-[450px] bg-transparent rounded-3xl">
+    <div className="w-full h-full min-h-[440px] bg-transparent">
       <Canvas
         dpr={[1, 1.5]}
         gl={{

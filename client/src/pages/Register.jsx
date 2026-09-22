@@ -2,44 +2,36 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FieldGroup, FieldLabel } from "@/components/ui/field";
 import { motion as Motion } from "framer-motion";
+import {
+  ShieldCheck,
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 const getErrorMessage = (value) => {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(getErrorMessage).filter(Boolean).join(" ");
-  }
-
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(getErrorMessage).filter(Boolean).join(" ");
   if (value && typeof value === "object") {
     return Object.values(value).map(getErrorMessage).filter(Boolean).join(" ");
   }
-
   return "";
 };
 
 const getRegisterError = (error) => {
   if (!error?.response) {
-    return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
+    return "Cannot connect to server. Please check your network connection.";
   }
-
   const { status, statusText, data } = error.response;
-
-  if (status === 409) {
-    return "Email atau username sudah digunakan.";
-  }
-
-  if (status === 429) {
-    return "Terlalu banyak percobaan. Silakan coba lagi nanti.";
-  }
-
-  if (status >= 500) {
-    return "Terjadi gangguan pada server. Silakan coba lagi nanti.";
-  }
+  if (status === 409) return "Email or username is already in use.";
+  if (status === 429) return "Too many attempts. Please try again in a few minutes.";
+  if (status >= 500) return "Server error. Please try again shortly.";
 
   const errorData = data?.error ?? data;
   const message = [
@@ -53,12 +45,9 @@ const getRegisterError = (error) => {
     .map(getErrorMessage)
     .find(Boolean);
 
-  if (message) {
-    return message;
-  }
-
+  if (message) return message;
   const statusDescription = statusText ? `: ${statusText}` : "";
-  return `Registrasi gagal (HTTP ${status}${statusDescription}). Periksa data Anda lalu coba lagi.`;
+  return `Registration failed (HTTP ${status}${statusDescription}). Please verify details and retry.`;
 };
 
 function Register() {
@@ -68,27 +57,39 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Compute simple password strength score (0 to 3)
+  const passwordStrength = (() => {
+    if (!password) return 0;
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password) && /[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+  })();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     if (!email.trim() || !username.trim() || !password || !confirmPassword) {
-      setError("Semua field wajib diisi.");
+      setError("All fields are required.");
       return;
     }
 
     if (password.length < 8) {
-      setError("Password minimal harus 8 karakter.");
+      setError("Password must be at least 8 characters long.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Password tidak sama.");
+      setError("Passwords do not match.");
       return;
     }
+
     setLoading(true);
     try {
       await register(email.trim(), username.trim(), password);
@@ -101,109 +102,153 @@ function Register() {
   };
 
   return (
-    <section className="py-12 sm:py-24 h-full mx-auto w-full max-w-screen-xl px-4 md:px-20 flex">
-      <div className="flex flex-col w-full justify-center items-center">
+    <section className="relative overflow-hidden py-12 sm:py-20 flex items-center justify-center min-h-[calc(100vh-8rem)]">
+      {/* Background ambient lighting */}
+      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-[500px] w-full max-w-lg overflow-hidden opacity-30">
+        <div className="absolute top-0 left-0 h-[400px] w-[400px] rounded-full bg-[#1ecfc1]/20 blur-[130px]" />
+      </div>
+
+      <div className="mx-auto w-full max-w-md px-4 sm:px-6">
         <Motion.div
-          initial={{ opacity: 0, y: -100 }}
-          animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
-          className="px-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#090e1c]/90 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl"
         >
-          <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white flex flex-col gap-2 mb-4">
-            Join the Fight
-          </h2>
-          <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-gray-900 bg-[#1ecfc1] flex flex-col gap-2 mb-12 sm:mb-20 px-2">
-            Create your account.
-          </h2>
-        </Motion.div>
-        <Motion.form
-          className="w-full flex flex-col max-w-[600px] justify-center items-center px-4 sm:px-10 border rounded-lg pb-10 sm:pb-14 pt-10 sm:pt-14 gap-8 sm:gap-10"
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
-          onSubmit={handleSubmit}
-        >
-          <h1 className="tracking-tight text-center text-balance font-bold text-2xl sm:text-3xl md:text-4xl text-white">
-            Register
-          </h1>
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[#1ecfc1]/40 bg-gradient-to-br from-[#1ecfc1]/20 via-[#0f172a] to-[#070a13] text-[#1ecfc1] shadow-[0_0_15px_-3px_rgba(30,207,193,0.3)] mb-4">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              Create Analyst Account
+            </h1>
+            <p className="mt-1.5 text-xs text-gray-400">
+              Join the community defense network against fraudulent recruiters.
+            </p>
+          </div>
+
           {error && (
             <div
               role="alert"
-              className="w-full rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center"
+              className="mb-5 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300"
             >
-              {error}
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+              <span>{error}</span>
             </div>
           )}
-          <FieldGroup className="flex flex-col gap-6 sm:gap-8 w-full">
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="email">
-                Email
-              </FieldLabel>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                className="px-4 py-5 md:text-lg"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="username">
+
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Email Field */}
+            <div>
+              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="analyst@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-[#060a14] pl-10 pr-4 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-[#1ecfc1]/50 focus:outline-none focus:ring-1 focus:ring-[#1ecfc1]/50 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Username Field */}
+            <div>
+              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Username
-              </FieldLabel>
-              <Input
-                id="username"
-                type="text"
-                placeholder="john_doe"
-                className="px-4 py-5 md:text-lg"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="password">
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="cyber_defender"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-[#060a14] pl-10 pr-4 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-[#1ecfc1]/50 focus:outline-none focus:ring-1 focus:ring-[#1ecfc1]/50 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Password
-              </FieldLabel>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="px-4 py-5 md:text-lg"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="confirmPassword">
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-[#060a14] pl-10 pr-10 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-[#1ecfc1]/50 focus:outline-none focus:ring-1 focus:ring-[#1ecfc1]/50 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* Password strength visual */}
+              {password && (
+                <div className="mt-2 flex items-center gap-1.5">
+                  <div className={`h-1 flex-1 rounded-full ${passwordStrength >= 1 ? "bg-[#1ecfc1]" : "bg-white/10"}`} />
+                  <div className={`h-1 flex-1 rounded-full ${passwordStrength >= 2 ? "bg-[#1ecfc1]" : "bg-white/10"}`} />
+                  <div className={`h-1 flex-1 rounded-full ${passwordStrength >= 3 ? "bg-emerald-400" : "bg-white/10"}`} />
+                  <span className="font-mono text-[10px] text-gray-400 ml-1">
+                    {passwordStrength === 3 ? "Strong" : passwordStrength === 2 ? "Medium" : "Basic"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Confirm Password Field */}
+            <div>
+              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Confirm Password
-              </FieldLabel>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                className="px-4 py-5 md:text-lg"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </FieldGroup>
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Repeat your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-[#060a14] pl-10 pr-4 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-[#1ecfc1]/50 focus:outline-none focus:ring-1 focus:ring-[#1ecfc1]/50 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
             <Button
               type="submit"
               disabled={loading}
-              className="mx-auto mt-4 bg-[#1ecfc1] text-gray-900 cursor-pointer hover:opacity-90 px-8 py-4 text-md md:text-lg"
+              className="w-full mt-4 flex items-center justify-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 font-semibold py-5 text-sm hover:bg-[#1ecfc1]/90 shadow-[0_0_20px_-3px_rgba(30,207,193,0.4)] cursor-pointer disabled:opacity-50"
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Creating Account..." : "Create Account"}
+              <ArrowRight className="h-4 w-4" />
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-[#1ecfc1] hover:underline">
-                Login
-              </Link>
-            </p>
-          </FieldGroup>
-        </Motion.form>
+          </form>
+
+          {/* Footer Link */}
+          <p className="mt-6 text-center text-xs text-gray-400">
+            Already have an account?{" "}
+            <Link to="/login" className="font-semibold text-[#1ecfc1] hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </Motion.div>
       </div>
     </section>
   );

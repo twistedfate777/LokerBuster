@@ -1,26 +1,68 @@
 import { Button } from "@/components/ui/button";
-import { FieldGroup, FieldLabel } from "@/components/ui/field";
-import { motion } from "framer-motion";
-import { ArrowRight, Upload, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight,
+  Upload,
+  X,
+  SearchCheck,
+  FileText,
+  Image as ImageIcon,
+  Sparkles,
+  AlertCircle,
+  ShieldCheck,
+  Terminal,
+  RotateCcw,
+  CheckCircle2,
+  Cpu,
+  Lock,
+} from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 
+const SAMPLE_PRESETS = [
+  {
+    label: "Telegram Crypto Scam",
+    text: "URGENT HIRING: Remote Data Entry Operator. Salary $4,500/week. No interview needed! Contact HR Manager via Telegram @CareerGlobalHR. Must deposit $50 refundable registration fee before receiving company laptop.",
+  },
+  {
+    label: "WhatsApp Ghost Recruiter",
+    text: "Hi! I am Jessica from Amazon Recruitment. We reviewed your profile and want to offer you a Part-Time Rating Assistant job. Earn $300-$800 daily by completing 15 product reviews. Reply YES to start.",
+  },
+  {
+    label: "Verified Frontend Role",
+    text: "Senior Frontend Engineer at Stripe. Requirements: 4+ years of React, TypeScript, and modern CSS. Competitive salary ($140k-$180k), equity, 401(k), and comprehensive health benefits. Apply via official stripe.com/jobs portal.",
+  },
+];
+
+const SCAN_STAGES = [
+  "Extracting job parameters & recruiter claims...",
+  "Running NLP deception & fee extortion analysis...",
+  "Cross-referencing corporate domain history...",
+  "Generating final threat intelligence dossier...",
+];
+
 function Test() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("text"); // "text" | "image"
   const [text, setText] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [stageIndex, setStageIndex] = useState(0);
   const [error, setError] = useState("");
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size must be under 5MB.");
+      return;
+    }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    setText("");
+    setError("");
   };
 
   const removeImage = () => {
@@ -30,18 +72,30 @@ function Test() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError("");
 
-    if (!text && !imageFile) {
-      setError("Masukkan teks atau upload gambar lowongan kerja.");
+    if (activeTab === "text" && !text.trim()) {
+      setError("Please enter or paste the job posting details.");
+      return;
+    }
+
+    if (activeTab === "image" && !imageFile) {
+      setError("Please select or drop a screenshot of the job posting.");
       return;
     }
 
     setLoading(true);
+    setStageIndex(0);
+
+    // Simulate scanning progress stages
+    const stageInterval = setInterval(() => {
+      setStageIndex((prev) => (prev < SCAN_STAGES.length - 1 ? prev + 1 : prev));
+    }, 700);
+
     try {
       let res;
-      if (imageFile) {
+      if (activeTab === "image" && imageFile) {
         const fd = new FormData();
         fd.append("image", imageFile);
         res = await api.post("/analyze/", fd, {
@@ -50,10 +104,12 @@ function Test() {
       } else {
         res = await api.post("/analyze/", { text });
       }
+      clearInterval(stageInterval);
       navigate("/result", { state: { report: res.data.data } });
     } catch (err) {
+      clearInterval(stageInterval);
       setError(
-        err.response?.data?.error?.message || "Terjadi kesalahan saat analisis."
+        err.response?.data?.error?.message || "An error occurred during analysis. Please try again."
       );
     } finally {
       setLoading(false);
@@ -61,107 +117,281 @@ function Test() {
   };
 
   return (
-    <section className="py-12 sm:py-24 h-full mx-auto w-full max-w-screen-xl px-4 md:px-20 flex">
-      <div className="flex flex-col w-full justify-center items-center">
+    <section className="relative overflow-hidden py-12 sm:py-20">
+      {/* Background ambient lighting */}
+      <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -z-10 h-[500px] w-full max-w-5xl overflow-hidden opacity-25">
+        <div className="absolute top-0 left-1/4 h-[350px] w-[500px] rounded-full bg-[#1ecfc1]/20 blur-[130px]" />
+      </div>
+
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        {/* Terminal Header */}
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 rounded-full border border-[#1ecfc1]/30 bg-[#1ecfc1]/10 px-3.5 py-1 text-xs font-medium text-[#1ecfc1] mb-4"
+          >
+            <Terminal className="h-3.5 w-3.5" />
+            Neural Scam Ingestion Terminal
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white"
+          >
+            Scan a Job Offer for Red Flags
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-3 text-sm sm:text-base text-gray-400 max-w-xl mx-auto"
+          >
+            Paste job text, recruitment chats, or upload job screenshots. Our AI analyzes metadata, salary realism, and payment demands.
+          </motion.p>
+        </div>
+
+        {/* Scanner Terminal Card */}
         <motion.div
-          initial={{ opacity: 0, y: -100 }}
-          animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
-          className="px-2"
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#090f1e]/90 shadow-2xl backdrop-blur-2xl"
         >
-          <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white flex flex-col gap-2 mb-4">
-            Is it a Trap?
-          </h2>
-          <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-gray-900 bg-[#1ecfc1] flex flex-col gap-2 mb-12 sm:mb-20 px-2">
-            Let's check yours.
-          </h2>
-        </motion.div>
-        <motion.form
-          className="w-full flex flex-col max-w-[600px] justify-center items-center px-4 sm:px-10 border rounded-lg pb-10 sm:pb-14 pt-10 sm:pt-14 gap-10 sm:gap-15"
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
-          onSubmit={handleSubmit}
-        >
-          <h1 className="tracking-tight text-center text-balance font-bold text-2xl sm:text-3xl md:text-4xl text-white">
-            Reality Check
-          </h1>
-
-          {error && (
-            <div className="w-full rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center">
-              {error}
+          {/* Terminal Title Bar */}
+          <div className="flex flex-wrap items-center justify-between border-b border-white/10 bg-white/[0.02] px-6 py-3.5">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#1ecfc1]/80" />
+              </div>
+              <span className="ml-2 font-mono text-xs font-semibold text-gray-300">
+                LOKERBUSTER // SCAN_ENGINE
+              </span>
             </div>
-          )}
 
-          <FieldGroup className="flex flex-col gap-8 sm:gap-12 w-full">
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="text">
-                Job Description
-              </FieldLabel>
-              <textarea
-                id="text"
-                placeholder="Paste the job posting text here..."
-                className="flex w-full rounded-md border border-input bg-background px-4 py-3 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[120px] resize-y md:text-lg"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                disabled={!!imageFile}
-              />
-            </FieldGroup>
+            {/* Input Mode Tabs */}
+            <div className="flex items-center rounded-xl border border-white/10 bg-black/40 p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("text");
+                  setError("");
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                  activeTab === "text"
+                    ? "bg-[#1ecfc1] text-gray-950 shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Text Input
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("image");
+                  setError("");
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
+                  activeTab === "image"
+                    ? "bg-[#1ecfc1] text-gray-950 shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+                Screenshot OCR
+              </button>
+            </div>
+          </div>
 
-            <FieldGroup>
-              <FieldLabel className="text-md">Or Upload Image</FieldLabel>
-              <div className="flex flex-col gap-3">
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
+            {error && (
+              <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Text Mode */}
+            {activeTab === "text" && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="job-text" className="font-mono text-xs text-gray-300 uppercase tracking-wider">
+                    Job Description / Offer Text
+                  </label>
+                  <span className="font-mono text-xs text-gray-400">
+                    {text.length} characters
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <textarea
+                    id="job-text"
+                    rows={6}
+                    placeholder="Paste email, WhatsApp/Telegram message, job link, or requirements here..."
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    disabled={loading}
+                    className="w-full rounded-2xl border border-white/10 bg-[#060a14] px-4 py-3.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-[#1ecfc1]/50 focus:outline-none focus:ring-1 focus:ring-[#1ecfc1]/50 leading-relaxed font-sans transition-all resize-y min-h-[160px]"
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                        handleSubmit();
+                      }
+                    }}
+                  />
+                  {text && (
+                    <button
+                      type="button"
+                      onClick={() => setText("")}
+                      className="absolute top-3 right-3 text-xs text-gray-400 hover:text-white bg-white/5 rounded-md px-2 py-1"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Sample Presets */}
+                <div className="pt-2">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2 font-mono">
+                    <Sparkles className="h-3 w-3 text-[#1ecfc1]" />
+                    <span>Quick-fill test samples:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {SAMPLE_PRESETS.map((sample, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setText(sample.text);
+                          setError("");
+                        }}
+                        className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 hover:border-[#1ecfc1]/40 hover:bg-[#1ecfc1]/10 hover:text-[#1ecfc1] transition-all"
+                      >
+                        {sample.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Image Mode */}
+            {activeTab === "image" && (
+              <div className="flex flex-col gap-4">
+                <label className="font-mono text-xs text-gray-300 uppercase tracking-wider">
+                  Upload Screenshot (JPG, PNG)
+                </label>
+
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".jpg,.jpeg,.png"
+                  accept="image/png, image/jpeg, image/jpg"
                   onChange={handleImageChange}
                   className="hidden"
-                  id="image-upload"
+                  id="image-file-input"
+                  disabled={loading}
                 />
-                <label
-                  htmlFor="image-upload"
-                  className="flex items-center gap-2 px-4 py-3 border border-dashed border-input rounded-md cursor-pointer hover:border-[#1ecfc1] transition-colors text-muted-foreground text-sm sm:text-base"
-                >
-                  <Upload className="w-4 h-4 shrink-0" />
-                  {imageFile
-                    ? imageFile.name
-                    : "Choose image (JPG, PNG, max 5MB)"}
-                </label>
-                {imagePreview && (
-                  <div className="relative w-fit">
+
+                {!imagePreview ? (
+                  <label
+                    htmlFor="image-file-input"
+                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/15 bg-[#060a14] py-12 px-6 text-center cursor-pointer hover:border-[#1ecfc1]/50 hover:bg-[#1ecfc1]/5 transition-all group"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-gray-400 group-hover:border-[#1ecfc1]/40 group-hover:text-[#1ecfc1] group-hover:scale-105 transition-all mb-3">
+                      <Upload className="h-6 w-6" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-200">
+                      Click to upload or drag and drop screenshot
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Supports PNG, JPG up to 5MB
+                    </p>
+                  </label>
+                ) : (
+                  <div className="relative flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-[#060a14] p-4">
                     <img
                       src={imagePreview}
-                      alt="preview"
-                      className="max-h-[200px] rounded-md border"
+                      alt="Uploaded Screenshot"
+                      className="max-h-[260px] rounded-xl border border-white/10 object-contain"
                     />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                    <div className="mt-3 flex items-center justify-between w-full max-w-sm px-2">
+                      <span className="font-mono text-xs text-gray-300 truncate">
+                        {imageFile?.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 bg-red-500/10 rounded-lg px-2.5 py-1"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
-            </FieldGroup>
+            )}
 
-            <FieldGroup>
+            {/* Scanning Progress Overlay */}
+            {loading && (
+              <div className="my-6 rounded-2xl border border-[#1ecfc1]/30 bg-[#1ecfc1]/5 p-5 text-center">
+                <div className="flex items-center justify-center gap-3">
+                  <span className="relative flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1ecfc1] opacity-75" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-[#1ecfc1]" />
+                  </span>
+                  <span className="font-mono text-xs sm:text-sm font-semibold text-[#1ecfc1]">
+                    ANALYZING THREAT VECTORS...
+                  </span>
+                </div>
+                <p className="mt-2 text-xs sm:text-sm text-gray-300 font-mono">
+                  {SCAN_STAGES[stageIndex]}
+                </p>
+                <div className="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-[#1ecfc1]"
+                    initial={{ width: "10%" }}
+                    animate={{ width: `${((stageIndex + 1) / SCAN_STAGES.length) * 100}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Submit Action Button */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10 pt-6">
+              <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-[#1ecfc1]" />
+                Zero data retention • In-memory validation
+              </span>
+
               <Button
                 type="submit"
                 disabled={loading}
-                className="mx-auto mt-4 cursor-pointer hover:opacity-90 px-5 py-4 text-md md:text-lg bg-[#1ecfc1] text-gray-900"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-8 py-6 font-semibold text-base shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50"
               >
                 {loading ? (
-                  "Analyzing..."
+                  <>
+                    <Cpu className="h-5 w-5 animate-spin" />
+                    Processing Threat Scan...
+                  </>
                 ) : (
                   <>
-                    Scan now <ArrowRight className="h-4 w-4 ml-1.5" />
+                    <SearchCheck className="h-5 w-5" />
+                    Scan This Job Now
+                    <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
-            </FieldGroup>
-          </FieldGroup>
-        </motion.form>
+            </div>
+          </form>
+        </motion.div>
       </div>
     </section>
   );

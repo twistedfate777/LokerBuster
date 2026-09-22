@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { MeshTransmissionMaterial } from "@react-three/drei";
@@ -7,30 +7,7 @@ const ShieldMesh = ({ hovered, ...props }) => {
   const groupRef = useRef();
   const glassMatRef = useRef();
   const lightRef = useRef();
-  const backLightRef = useRef();
-  const backGlowRef = useRef();
   const rivetRefs = useRef([]);
-
-  const glowTexture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-
-    const context = canvas.getContext("2d");
-    const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
-    gradient.addColorStop(0, "rgba(30, 207, 193, 1)");
-    gradient.addColorStop(0.35, "rgba(30, 207, 193, 0.55)");
-    gradient.addColorStop(0.65, "rgba(30, 207, 193, 0.18)");
-    gradient.addColorStop(1, "rgba(30, 207, 193, 0)");
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 256, 256);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }, []);
-
-  useEffect(() => () => glowTexture.dispose(), [glowTexture]);
 
 
   const { frameShape, coreShape, frameExtrude, coreExtrude } = useMemo(() => {
@@ -87,13 +64,7 @@ const ShieldMesh = ({ hovered, ...props }) => {
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
 
-    if (
-      !groupRef.current ||
-      !glassMatRef.current ||
-      !lightRef.current ||
-      !backLightRef.current ||
-      !backGlowRef.current
-    ) return;
+    if (!groupRef.current || !glassMatRef.current || !lightRef.current) return;
 
 
     const targetScale = hovered ? 1.05 : 1;
@@ -103,15 +74,11 @@ const ShieldMesh = ({ hovered, ...props }) => {
     if (hovered) {
       const pulse = 0.5 + Math.sin(t * 8) * 0.5;
       glassMatRef.current.emissiveIntensity = THREE.MathUtils.lerp(glassMatRef.current.emissiveIntensity, 1.5 + pulse, 0.1);
-      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, 8 + pulse * 3, 0.1);
-      backLightRef.current.intensity = THREE.MathUtils.lerp(backLightRef.current.intensity, 4 + pulse * 1.5, 0.1);
-      backGlowRef.current.material.opacity = THREE.MathUtils.lerp(backGlowRef.current.material.opacity, 0.68 + pulse * 0.15, 0.1);
+      lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, 6 + pulse * 2, 0.1);
     } else {
 
       glassMatRef.current.emissiveIntensity = THREE.MathUtils.lerp(glassMatRef.current.emissiveIntensity, 0.2, 0.1);
       lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, 0, 0.1);
-      backLightRef.current.intensity = THREE.MathUtils.lerp(backLightRef.current.intensity, 0, 0.1);
-      backGlowRef.current.material.opacity = THREE.MathUtils.lerp(backGlowRef.current.material.opacity, 0, 0.1);
     }
 
 
@@ -126,16 +93,6 @@ const ShieldMesh = ({ hovered, ...props }) => {
   return (
     <group ref={groupRef} {...props}>
       <pointLight ref={lightRef} color="#1ecfc1" distance={5} intensity={0} position={[0, 0, 0.5]} />
-      <pointLight ref={backLightRef} color="#1ecfc1" distance={5} intensity={0} position={[0, 0, -0.8]} />
-      <sprite ref={backGlowRef} position={[0, 0, -0.65]} scale={[6.8, 7.2, 1]}>
-        <spriteMaterial
-          map={glowTexture}
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </sprite>
 
       <mesh position={[0, 0, -0.15]} castShadow receiveShadow>
         <extrudeGeometry args={[frameShape, frameExtrude]} />
