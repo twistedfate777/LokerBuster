@@ -126,14 +126,7 @@ function Test() {
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Terminal Header */}
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 rounded-full border border-[#1ecfc1]/30 bg-[#1ecfc1]/10 px-3.5 py-1 text-xs font-medium text-[#1ecfc1] mb-4"
-          >
-            <Terminal className="h-3.5 w-3.5" />
-            Neural Scam Ingestion Terminal
-          </motion.div>
+          
 
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
@@ -163,16 +156,7 @@ function Test() {
         >
           {/* Terminal Title Bar */}
           <div className="flex flex-wrap items-center justify-between border-b border-white/10 bg-white/[0.02] px-6 py-3.5">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
-                <span className="h-2.5 w-2.5 rounded-full bg-[#1ecfc1]/80" />
-              </div>
-              <span className="ml-2 font-mono text-xs font-semibold text-gray-300">
-                LOKERBUSTER // SCAN_ENGINE
-              </span>
-            </div>
+            
 
             {/* Input Mode Tabs */}
             <div className="flex items-center rounded-xl border border-white/10 bg-black/40 p-1">
