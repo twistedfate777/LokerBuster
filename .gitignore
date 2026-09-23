@@ -17,6 +17,9 @@ dist-ssr/
 *.log
 npm-debug.log*
 
+# Docs
+.docs/
+
 # System & IDE
 .DS_Store
 Thumbs.db

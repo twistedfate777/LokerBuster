@@ -70,7 +70,7 @@ const STEP_THEMES = [
 
 function WorkSectionLeft() {
   // Default to step 1 (hover: 1) or null for all-view, allows intuitive exploration
-  const [hoverObject, setHoverObject] = useState(1);
+  const [hoverObject, setHoverObject] = useState(null);
   const [pinnedObject, setPinnedObject] = useState(null);
 
   // Active object is pinned selection if set, otherwise current hover (or null for all)
@@ -99,14 +99,12 @@ function WorkSectionLeft() {
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2.5 w-2.5">
             <span
-              className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-                currentTheme ? currentTheme.dotColor : "bg-[#1ecfc1]"
-              }`}
+              className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${currentTheme ? currentTheme.dotColor : "bg-[#1ecfc1]"
+                }`}
             />
             <span
-              className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
-                currentTheme ? currentTheme.dotColor : "bg-[#1ecfc1]"
-              }`}
+              className={`relative inline-flex h-2.5 w-2.5 rounded-full ${currentTheme ? currentTheme.dotColor : "bg-[#1ecfc1]"
+                }`}
             />
           </span>
           <span className="text-xs sm:text-sm font-medium text-gray-200">
@@ -161,31 +159,28 @@ function WorkSectionLeft() {
                     handleCardClick(work.hover);
                   }
                 }}
-                className={`group relative flex-1 flex flex-col justify-between p-5 lg:p-6 transition-all duration-200 cursor-pointer select-none text-left ${
-                  isActive
+                className={`group relative flex-1 flex flex-col justify-between p-5 lg:p-6 transition-all duration-200 cursor-pointer select-none text-left ${isActive
                     ? theme.activeBg
                     : isDimmed
-                    ? "bg-transparent opacity-60 hover:opacity-95 hover:bg-white/[0.03]"
-                    : "bg-transparent hover:bg-white/[0.04]"
-                }`}
+                      ? "bg-transparent opacity-60 hover:opacity-95 hover:bg-white/[0.03]"
+                      : "bg-transparent hover:bg-white/[0.04]"
+                  }`}
               >
                 {/* Active Indicator Bar on left with Unique Step Color */}
                 <div
-                  className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
-                    isActive
+                  className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${isActive
                       ? theme.activeIndicator
                       : `bg-transparent ${theme.hoverIconBg}`
-                  }`}
+                    }`}
                 />
 
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors duration-200 ${
-                        isActive
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors duration-200 ${isActive
                           ? theme.activeIconBg
                           : `border-white/10 bg-white/5 text-gray-400 ${theme.hoverIconBg}`
-                      }`}
+                        }`}
                     >
                       <Icon className="h-5 w-5" />
                     </div>
@@ -200,9 +195,8 @@ function WorkSectionLeft() {
                         </span>
                       </div>
                       <h3
-                        className={`text-base font-semibold tracking-tight transition-colors duration-200 ${
-                          isActive ? "text-white" : "text-gray-200 group-hover:text-white"
-                        }`}
+                        className={`text-base font-semibold tracking-tight transition-colors duration-200 ${isActive ? "text-white" : "text-gray-200 group-hover:text-white"
+                          }`}
                       >
                         {work.title}
                       </h3>
@@ -210,11 +204,10 @@ function WorkSectionLeft() {
                   </div>
 
                   <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
-                      isActive
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${isActive
                         ? `${theme.activeIconBg} translate-x-0.5`
                         : `border-white/5 bg-white/5 text-gray-400 opacity-40 group-hover:opacity-100 ${theme.tagColor}`
-                    }`}
+                      }`}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </div>
@@ -266,16 +259,14 @@ function WorkSectionLeft() {
 
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium border ${
-                    currentTheme
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium border ${currentTheme
                       ? currentTheme.badgeBorder
                       : "bg-[#1ecfc1]/10 text-[#1ecfc1] border-[#1ecfc1]/20"
-                  }`}
+                    }`}
                 >
                   <span
-                    className={`h-1.5 w-1.5 rounded-full animate-ping ${
-                      currentTheme ? currentTheme.dotColor : "bg-[#1ecfc1]"
-                    }`}
+                    className={`h-1.5 w-1.5 rounded-full animate-ping ${currentTheme ? currentTheme.dotColor : "bg-[#1ecfc1]"
+                      }`}
                   />
                   LIVE WebGL
                 </span>
@@ -312,11 +303,10 @@ function WorkSectionLeft() {
               <button
                 key={work.title}
                 onClick={() => setHoverObject(work.hover)}
-                className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all ${
-                  isActive
+                className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition-all ${isActive
                     ? theme.mobileActive
                     : "border-white/10 bg-white/5 text-gray-400 hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <span className={`font-mono text-xs font-bold ${theme.tagColor}`}>
                   0{idx + 1}

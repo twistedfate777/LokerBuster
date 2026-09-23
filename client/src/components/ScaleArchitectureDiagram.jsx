@@ -273,7 +273,7 @@ const LockerBusterScene = ({ hoverObject }) => {
         anchorX="left"
         material-toneMapped={false}
       >
-        LOCKERBUSTER CORE COMPONENTS
+        LOKERBUSTER CORE COMPONENTS
       </Text>
 
       <group position={[0, 0, 0]}>
