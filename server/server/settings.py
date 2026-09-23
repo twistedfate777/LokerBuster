@@ -191,6 +191,7 @@ SIMPLE_JWT = {
 }
 
 GROQ_API_KEY = env('GROQ_API_KEY', default='')
+GROQ_MODEL = env('GROQ_MODEL', default='llama-3.1-8b-instant')
 OCR_API_KEY = env('OCR_API_KEY', default='helloworld')
 CLOUDINARY_CLOUD_NAME = env('CLOUDINARY_CLOUD_NAME', default='')
 CLOUDINARY_API_KEY = env('CLOUDINARY_API_KEY', default='')
