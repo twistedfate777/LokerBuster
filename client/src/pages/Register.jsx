@@ -3,63 +3,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FieldGroup, FieldLabel } from "@/components/ui/field";
-import { motion as Motion } from "framer-motion";
-
-const getErrorMessage = (value) => {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(getErrorMessage).filter(Boolean).join(" ");
-  }
-
-  if (value && typeof value === "object") {
-    return Object.values(value).map(getErrorMessage).filter(Boolean).join(" ");
-  }
-
-  return "";
-};
-
-const getRegisterError = (error) => {
-  if (!error?.response) {
-    return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
-  }
-
-  const { status, statusText, data } = error.response;
-
-  if (status === 409) {
-    return "Email atau username sudah digunakan.";
-  }
-
-  if (status === 429) {
-    return "Terlalu banyak percobaan. Silakan coba lagi nanti.";
-  }
-
-  if (status >= 500) {
-    return "Terjadi gangguan pada server. Silakan coba lagi nanti.";
-  }
-
-  const errorData = data?.error ?? data;
-  const message = [
-    errorData?.message,
-    errorData?.detail,
-    errorData?.error_description,
-    errorData?.errors,
-    errorData?.non_field_errors,
-    errorData,
-  ]
-    .map(getErrorMessage)
-    .find(Boolean);
-
-  if (message) {
-    return message;
-  }
-
-  const statusDescription = statusText ? `: ${statusText}` : "";
-  return `Registrasi gagal (HTTP ${status}${statusDescription}). Periksa data Anda lalu coba lagi.`;
-};
+import { motion } from "framer-motion";
+import { Shield, Lock, Mail, User, ArrowRight, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 function Register() {
   const { register } = useAuth();
@@ -76,135 +21,138 @@ function Register() {
     setError("");
 
     if (!email.trim() || !username.trim() || !password || !confirmPassword) {
-      setError("Semua field wajib diisi.");
+      setError("Semua kolom wajib diisi.");
       return;
     }
 
     if (password.length < 8) {
-      setError("Password minimal harus 8 karakter.");
+      setError("Kata sandi minimal harus 8 karakter.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Password tidak sama.");
+      setError("Konfirmasi kata sandi tidak cocok.");
       return;
     }
+
     setLoading(true);
     try {
       await register(email.trim(), username.trim(), password);
       navigate("/test");
     } catch (err) {
-      setError(getRegisterError(err));
+      setError(
+        err.response?.data?.error?.message ||
+          "Gagal mendaftar akun. Email atau username mungkin sudah terdaftar."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="py-12 sm:py-24 h-full mx-auto w-full max-w-screen-xl px-4 md:px-20 flex">
-      <div className="flex flex-col w-full justify-center items-center">
-        <Motion.div
-          initial={{ opacity: 0, y: -100 }}
-          animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
-          className="px-2"
-        >
-          <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white flex flex-col gap-2 mb-4">
-            Join the Fight
-          </h2>
-          <h2 className="mt-2 tracking-tight text-center text-balance font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-gray-900 bg-[#1ecfc1] flex flex-col gap-2 mb-12 sm:mb-20 px-2">
-            Create your account.
-          </h2>
-        </Motion.div>
-        <Motion.form
-          className="w-full flex flex-col max-w-[600px] justify-center items-center px-4 sm:px-10 border rounded-lg pb-10 sm:pb-14 pt-10 sm:pt-14 gap-8 sm:gap-10"
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0, transition: { duration: 1.2 } }}
-          onSubmit={handleSubmit}
-        >
-          <h1 className="tracking-tight text-center text-balance font-bold text-2xl sm:text-3xl md:text-4xl text-white">
-            Register
-          </h1>
-          {error && (
-            <div
-              role="alert"
-              className="w-full rounded-md border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center"
-            >
-              {error}
-            </div>
-          )}
-          <FieldGroup className="flex flex-col gap-6 sm:gap-8 w-full">
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="email">
-                Email
-              </FieldLabel>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                className="px-4 py-5 md:text-lg"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="username">
-                Username
-              </FieldLabel>
-              <Input
-                id="username"
-                type="text"
-                placeholder="john_doe"
-                className="px-4 py-5 md:text-lg"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="password">
-                Password
-              </FieldLabel>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="px-4 py-5 md:text-lg"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <FieldGroup>
-              <FieldLabel className="text-md" htmlFor="confirmPassword">
-                Confirm Password
-              </FieldLabel>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                className="px-4 py-5 md:text-lg"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </FieldGroup>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="mx-auto mt-4 bg-[#1ecfc1] text-gray-900 cursor-pointer hover:opacity-90 px-8 py-4 text-md md:text-lg"
-            >
-              {loading ? "Creating account..." : "Create Account"}
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-[#1ecfc1] hover:underline">
-                Login
-              </Link>
-            </p>
-          </FieldGroup>
-        </Motion.form>
-      </div>
+    <section className="py-12 sm:py-20 mx-auto w-full max-w-lg px-4 flex flex-col justify-center items-center min-h-[calc(100vh-80px)]">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full cyber-glass-glow rounded-3xl p-6 sm:p-10 border border-white/10"
+      >
+        {/* Header */}
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="p-3 rounded-2xl bg-gradient-to-tr from-[#1ecfc1]/20 to-blue-500/20 border border-[#1ecfc1]/40 mb-4">
+            <Shield className="w-8 h-8 text-[#1ecfc1]" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Buat Akun Baru</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Bergabunglah dan lindungi diri dari penipuan lowongan kerja.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5" htmlFor="reg-email">
+              <Mail className="w-3.5 h-3.5 text-[#1ecfc1]" /> Alamat Email
+            </label>
+            <Input
+              id="reg-email"
+              type="email"
+              placeholder="nama@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="bg-slate-950/80 border-white/10 text-white placeholder:text-slate-500 py-3 rounded-xl focus:border-[#1ecfc1]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5" htmlFor="reg-username">
+              <User className="w-3.5 h-3.5 text-[#1ecfc1]" /> Nama Pengguna (Username)
+            </label>
+            <Input
+              id="reg-username"
+              type="text"
+              placeholder="contoh: budi_santoso"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="bg-slate-950/80 border-white/10 text-white placeholder:text-slate-500 py-3 rounded-xl focus:border-[#1ecfc1]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5" htmlFor="reg-password">
+              <Lock className="w-3.5 h-3.5 text-[#1ecfc1]" /> Kata Sandi (Min. 8 Karakter)
+            </label>
+            <Input
+              id="reg-password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="bg-slate-950/80 border-white/10 text-white placeholder:text-slate-500 py-3 rounded-xl focus:border-[#1ecfc1]"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5" htmlFor="reg-confirm-password">
+              <Lock className="w-3.5 h-3.5 text-[#1ecfc1]" /> Konfirmasi Kata Sandi
+            </label>
+            <Input
+              id="reg-confirm-password"
+              type="password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="bg-slate-950/80 border-white/10 text-white placeholder:text-slate-500 py-3 rounded-xl focus:border-[#1ecfc1]"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 bg-[#1ecfc1] text-gray-950 font-bold hover:bg-[#1ecfc1]/90 shadow-[0_0_20px_rgba(30,207,193,0.3)] py-6 rounded-xl flex items-center justify-center gap-2"
+          >
+            {loading ? "Mendaftarkan..." : "Daftar Akun Sekarang"}
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+
+          <p className="text-center text-xs text-slate-400 mt-4">
+            Sudah punya akun?{" "}
+            <Link to="/login" className="text-[#1ecfc1] hover:underline font-semibold">
+              Masuk di Sini
+            </Link>
+          </p>
+        </form>
+      </motion.div>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
-import { Button, buttonVariants } from "./ui/button";
-import { ArrowRight, Check } from "lucide-react";
+import { Button } from "./ui/button";
+import { ArrowRight, ShieldCheck, Zap, Lock, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -8,60 +8,56 @@ function ScanNow() {
   const { user } = useAuth();
 
   return (
-    <section>
-      <motion.div
-        className="py-16 sm:py-24 h-full mx-auto w-full max-w-screen-xl px-4 md:px-20"
-        initial={{ opacity: 0, y: 100 }}
-        whileInView={{ opacity: 1, y: 0, transition: { duration: 1.5 } }}
-        viewport={{ once: true, margin: "-200px" }}
-      >
-        <div className="mb-8 sm:mb-12 px-4 lg:px-8">
-          <div className="mx-auto max-w-2xl sm:text-center">
-            <h2 className="order-1 mt-2 tracking-tight text-center text-balance font-bold text-3xl sm:text-5xl md:text-6xl text-white flex flex-col gap-2">
-              <span className="relative px-1 rounded bg-[#1ecfc1] text-gray-900 py-2">
-                Start scanning
-              </span>
-              <span>Now!</span>
-            </h2>
-          </div>
-        </div>
+    <section className="py-16 sm:py-24 border-t border-white/5 relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1ecfc1]/5 to-transparent pointer-events-none" />
 
-        <ul className="mx-auto text-left px-4 sm:px-3 mt-8 sm:mt-12 max-w-prose text-sm sm:text-lg space-y-2 w-fit">
-          <li className="flex gap-1.5 items-center text-left w-fit">
-            <Check className="h-5 w-5 shrink-0 text-[#1ecfc1]" />
-            Instant Scam Scoring based on real-time company history vetting
-          </li>
-          <li className="flex gap-1.5 items-center text-left w-fit">
-            <Check className="h-5 w-5 shrink-0 text-[#1ecfc1]" />
-            Advanced shield technology to block fraudulent recruitment networks
-          </li>
-          <li className="flex gap-1.5 items-center text-left w-fit">
-            <Check className="h-5 w-5 shrink-0 text-[#1ecfc1]" />
-            Total data privacy to vet your next career move without leaking info
-          </li>
-          <div className="flex justify-center">
-            {user ? (
-              <Link to="/test" className="flex justify-center w-full mt-5">
-                <Button className="mx-auto mt-4 bg-[#1ecfc1] text-gray-900 cursor-pointer hover:opacity-90 px-5 py-4">
-                  Scan now <ArrowRight className="h-4 w-4 ml-1.5" />
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/login" className="flex justify-center w-full mt-5">
-                <Button
-                  className={buttonVariants({
-                    size: "lg",
-                    className:
-                      "mx-auto mt-4 bg-[#1ecfc1] text-gray-900 cursor-pointer hover:opacity-90",
-                  })}
-                >
-                  Login to Scan <ArrowRight className="h-4 w-4 ml-1.5" />
-                </Button>
-              </Link>
-            )}
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div
+          className="rounded-3xl cyber-glass-glow p-8 sm:p-12 lg:p-16 text-center relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          {/* Subtle Ambient Shapes */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#1ecfc1]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1ecfc1]/10 border border-[#1ecfc1]/30 text-xs text-[#1ecfc1] mb-6">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Gratis • Tanpa Perlu Kartu Kredit</span>
           </div>
-        </ul>
-      </motion.div>
+
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight max-w-2xl mx-auto">
+            Jangan Pertaruhkan Masa Depan Anda pada{" "}
+            <span className="text-[#1ecfc1]">Lowongan Palsu.</span>
+          </h2>
+
+          <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-xl mx-auto">
+            Hanya butuh 5 detik untuk memverifikasi keaslian lowongan kerja dan terhindar dari kerugian jutaan rupiah.
+          </p>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link to={user ? "/test" : "/login"}>
+              <Button className="w-full sm:w-auto bg-[#1ecfc1] text-gray-950 font-bold hover:bg-[#1ecfc1]/90 shadow-[0_0_25px_rgba(30,207,193,0.35)] px-8 py-6 text-base rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+                <Zap className="w-5 h-5 fill-current" />
+                <span>Mulai Scan Sekarang</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link to="/community">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto border-white/15 bg-white/5 hover:bg-white/10 text-slate-200 px-6 py-6 text-base rounded-xl flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <span>Cek Database Komunitas</span>
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

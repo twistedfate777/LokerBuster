@@ -1,284 +1,335 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useLocation, Navigate } from "react-router-dom";
-import { ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useLocation, Navigate, Link } from "react-router-dom";
+import {
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
+  Share2,
+  Copy,
+  RotateCcw,
+  Check,
+  Sparkles,
+  Building2,
+  Briefcase,
+  HelpCircle,
+  Lightbulb,
+} from "lucide-react";
 import {
   RadialBar,
   RadialBarChart,
   ResponsiveContainer,
   PolarAngleAxis,
 } from "recharts";
+import { Button } from "@/components/ui/button";
 
-function Result() {
+export default function Result() {
   const location = useLocation();
   const report = location.state?.report;
 
-  const [hasEnteredScam, setHasEnteredScam] = useState(false);
-  const [hasEnteredConfidence, setHasEnteredConfidence] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!report) return <Navigate to="/test" replace />;
 
   const {
-    scam_score,
-    confidence_level,
-    reason,
-    company_name,
-    position,
-    is_scam,
-    red_flags,
-    green_flags,
+    scam_score = 0,
+    confidence_level = 0,
+    reason = "",
+    company_name = "",
+    position = "",
+    is_scam = false,
+    red_flags = [],
+    green_flags = [],
   } = report;
 
-  const data = [{ value: scam_score }];
-  const data2 = [{ value: confidence_level }];
+  const scoreData = [{ value: scam_score }];
+  const confidenceData = [{ value: confidence_level }];
 
-  let scamText = "";
-  if (scam_score <= 20) {
-    scamText =
-      "Looks good! However, it is always a wise practice to independently research the company before signing.";
-  } else if (scam_score <= 40) {
-    scamText =
-      "Fairly safe, though a few details seem slightly off. Review the terms carefully before taking the next step.";
-  } else if (scam_score <= 60) {
-    scamText =
-      "We advise taking a closer look. Make sure to thoroughly verify the recruiter's identity and company details.";
-  } else if (scam_score <= 80) {
-    scamText =
-      "We strongly advise against engaging further. The risks heavily outweigh the potential opportunity.";
-  } else {
-    scamText =
-      "Please step away from this offer. Engaging further could compromise your personal data or finances.";
-  }
+  // Color mappings
+  const isHighRisk = scam_score >= 60 || is_scam;
+  const isModerateRisk = scam_score >= 35 && scam_score < 60;
 
-  let confidenceText = "";
-  if (confidence_level <= 20) {
-    confidenceText =
-      "Low Confidence: Data is limited. We recommend conducting a manual search to supplement this result.";
-  } else if (confidence_level <= 40) {
-    confidenceText =
-      "Developing Confidence: Our initial scan found some indicators, but further evidence would provide a clearer picture.";
-  } else if (confidence_level <= 60) {
-    confidenceText =
-      "Moderate Confidence: Our analysis is based on standard patterns; please use this result as a general guideline.";
-  } else if (confidence_level <= 80) {
-    confidenceText =
-      "High Confidence: Most indicators align with our database of verified job offer characteristics.";
-  } else {
-    confidenceText =
-      "Total Confidence: Our analysis shows strong correlation with verified data points. This assessment is highly reliable.";
-  }
+  const verdictTheme = isHighRisk
+    ? {
+        title: "TERINDIKASI SCAM / BERBAHAYA",
+        badgeColor: "bg-red-500/20 text-red-400 border-red-500/40",
+        gaugeColor: "#ef4444",
+        summaryText:
+          "Sangat disarankan untuk TIDAK melanjutkan proses rekrutmen ini. Risiko kerugian finansial atau pencurian identitas sangat tinggi.",
+      }
+    : isModerateRisk
+    ? {
+        title: "PERHATIAN: RISIKO MENENGAH",
+        badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+        gaugeColor: "#f59e0b",
+        summaryText:
+          "Ditemukan beberapa kejanggalan pada rincian lowongan. Lakukan pengecekan identitas perusahaan secara independen sebelum memberikan data pribadi.",
+      }
+    : {
+        title: "LOWONGAN TERLIHAT AMAN",
+        badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+        gaugeColor: "#10b981",
+        summaryText:
+          "Tidak ditemukan indikator bahaya yang signifikan. Namun tetap waspada dan jangan pernah mentransfer uang dalam proses seleksi.",
+      };
 
-  const hasRedFlags = red_flags && red_flags.length > 0;
-  const hasGreenFlags = green_flags && green_flags.length > 0;
+  const handleCopySummary = () => {
+    const summary = `[LokerBuster Security Report]
+Perusahaan: ${company_name || "N/A"}
+Posisi: ${position || "N/A"}
+Status: ${is_scam ? "TERINDIKASI SCAM" : "AMAN"}
+Scam Score: ${scam_score}/100 | Confidence: ${confidence_level}%
+Catatan: ${reason}
+Diverifikasi oleh LokerBuster AI.`;
+
+    navigator.clipboard.writeText(summary);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   return (
-    <section className="flex flex-col min-h-screen h-full w-full items-center justify-center py-16 sm:my-24 gap-4 px-4">
-      <motion.h2
-        className="mt-2 tracking-tight text-center text-balance font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white flex flex-col gap-2 mb-4"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1, transition: { duration: 1.2 } }}
-      >
-        Your Test Results
-      </motion.h2>
+    <section className="py-10 sm:py-16 mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+      {/* Top Breadcrumb & Action Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <Link
+          to="/test"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-400 hover:text-white transition-colors"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span>Scan Lowongan Lain</span>
+        </Link>
 
-      <motion.div
-        className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { delay: 0.5 } }}
-      >
-        {company_name && (
-          <p className="text-base sm:text-lg text-muted-foreground text-center">
-            Company:{" "}
-            <span className="font-semibold text-white">{company_name}</span>
-          </p>
-        )}
-        {position && (
-          <p className="text-base sm:text-lg text-muted-foreground text-center">
-            Position:{" "}
-            <span className="font-semibold text-white">{position}</span>
-          </p>
-        )}
-      </motion.div>
-
-      <motion.div
-        className={`mt-2 px-4 py-1 rounded-full text-sm font-bold flex items-center gap-2 ${is_scam ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"}`}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1, transition: { delay: 0.6 } }}
-      >
-        {is_scam ? (
-          <ShieldAlert className="w-4 h-4" />
-        ) : (
-          <ShieldCheck className="w-4 h-4" />
-        )}
-        {is_scam ? "SCAM DETECTED" : "LOOKS SAFE"}
-      </motion.div>
-
-      <motion.div
-        className="relative w-full max-w-lg h-52 sm:h-64 flex flex-col items-center justify-end overflow-hidden pointer-events-none"
-        onViewportEnter={() => setHasEnteredScam(true)}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1, transition: { duration: 1.2 } }}
-        viewport={{ once: true, margin: "-200px" }}
-      >
-        {hasEnteredScam && (
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart
-              cx="50%"
-              cy="100%"
-              innerRadius="80%"
-              outerRadius="100%"
-              barSize={20}
-              data={data}
-              startAngle={180}
-              endAngle={0}
-            >
-              <PolarAngleAxis
-                type="number"
-                domain={[0, 100]}
-                angleAxisId={0}
-                tick={false}
-              />
-              <RadialBar
-                background
-                dataKey="value"
-                cornerRadius={10}
-                fill="#f01114"
-              />
-            </RadialBarChart>
-          </ResponsiveContainer>
-        )}
-        <div className="absolute bottom-4 flex flex-col items-center">
-          <p className="text-4xl sm:text-5xl font-black text-white">
-            {scam_score}
-          </p>
-          <p className="text-[#f01114] tracking-widest text-xs">SCAM SCORE</p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopySummary}
+            className="border-white/10 hover:border-[#1ecfc1]/40 text-xs text-slate-300 hover:text-[#1ecfc1] gap-1.5"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">Tersalin ke Clipboard!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Salin Ringkasan</span>
+              </>
+            )}
+          </Button>
         </div>
-      </motion.div>
-      <div className="px-4 sm:px-10 text-center mt-6 sm:mt-10 text-sm sm:text-base max-w-2xl">
-        {scamText}
       </div>
 
+      {/* Main Verdict Dossier Banner */}
       <motion.div
-        className="relative w-full max-w-lg h-52 sm:h-64 flex flex-col items-center justify-end overflow-hidden pointer-events-none"
-        onViewportEnter={() => setHasEnteredConfidence(true)}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1, transition: { duration: 1.2 } }}
-        viewport={{ once: true, margin: "-200px" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="cyber-glass-glow rounded-3xl p-6 sm:p-10 border border-white/10 space-y-8"
       >
-        {hasEnteredConfidence && (
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart
-              cx="50%"
-              cy="100%"
-              innerRadius="80%"
-              outerRadius="100%"
-              barSize={20}
-              data={data2}
-              startAngle={180}
-              endAngle={0}
-            >
-              <PolarAngleAxis
-                type="number"
-                domain={[0, 100]}
-                angleAxisId={0}
-                tick={false}
-              />
-              <RadialBar
-                background
-                dataKey="value"
-                cornerRadius={10}
-                fill="#1ecfc1"
-              />
-            </RadialBarChart>
-          </ResponsiveContainer>
+        {/* Header with Title and Company Dossier */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+          <div>
+            <span className="text-xs uppercase tracking-widest text-slate-400 font-mono">
+              LokerBuster Dossier Report
+            </span>
+            <div className="flex items-center gap-3 mt-1.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+                Hasil Analisis Keamanan
+              </h1>
+            </div>
+            {(company_name || position) && (
+              <div className="flex flex-wrap items-center gap-3 mt-2 text-xs sm:text-sm text-slate-300">
+                {company_name && (
+                  <span className="flex items-center gap-1 font-semibold text-white">
+                    <Building2 className="w-4 h-4 text-[#1ecfc1]" />
+                    {company_name}
+                  </span>
+                )}
+                {position && (
+                  <span className="flex items-center gap-1 text-slate-400">
+                    <Briefcase className="w-4 h-4 text-blue-400" />
+                    {position}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Status Badge */}
+          <div
+            className={`px-4 py-2 rounded-2xl border text-xs sm:text-sm font-bold flex items-center gap-2 ${verdictTheme.badgeColor}`}
+          >
+            {isHighRisk ? (
+              <ShieldAlert className="w-5 h-5 text-red-400" />
+            ) : isModerateRisk ? (
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+            ) : (
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            )}
+            <span>{verdictTheme.title}</span>
+          </div>
+        </div>
+
+        {/* Dual Gauges (Scam Score & Confidence Level) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Gauge 1: Scam Score */}
+          <div className="bg-slate-950/60 rounded-2xl p-6 border border-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Indeks Risiko (Scam Score)
+            </span>
+
+            <div className="relative w-48 h-32 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart
+                  cx="50%"
+                  cy="100%"
+                  innerRadius="75%"
+                  outerRadius="100%"
+                  barSize={16}
+                  data={scoreData}
+                  startAngle={180}
+                  endAngle={0}
+                >
+                  <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                  <RadialBar
+                    background={{ fill: "rgba(255,255,255,0.05)" }}
+                    dataKey="value"
+                    cornerRadius={10}
+                    fill={verdictTheme.gaugeColor}
+                  />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute bottom-0 flex flex-col items-center">
+                <span className="text-3xl font-black text-white">{scam_score}</span>
+                <span className="text-[10px] text-slate-400">/ 100 POIN</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-4 max-w-xs">{verdictTheme.summaryText}</p>
+          </div>
+
+          {/* Gauge 2: Confidence Level */}
+          <div className="bg-slate-950/60 rounded-2xl p-6 border border-white/5 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Tingkat Keyakinan AI (Confidence)
+            </span>
+
+            <div className="relative w-48 h-32 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart
+                  cx="50%"
+                  cy="100%"
+                  innerRadius="75%"
+                  outerRadius="100%"
+                  barSize={16}
+                  data={confidenceData}
+                  startAngle={180}
+                  endAngle={0}
+                >
+                  <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                  <RadialBar
+                    background={{ fill: "rgba(255,255,255,0.05)" }}
+                    dataKey="value"
+                    cornerRadius={10}
+                    fill="#1ecfc1"
+                  />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute bottom-0 flex flex-col items-center">
+                <span className="text-3xl font-black text-white">{confidence_level}%</span>
+                <span className="text-[10px] text-[#1ecfc1]">CONFIDENCE</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-4 max-w-xs">
+              {confidence_level >= 75
+                ? "Keyakinan Tinggi: Korelasi kuat dengan basis data pola lowongan kami."
+                : "Keyakinan Menengah: Data terbatas, disarankan verifikasi manual."}
+            </p>
+          </div>
+        </div>
+
+        {/* AI Breakdown Narrative */}
+        {reason && (
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#1ecfc1] uppercase tracking-wider">
+              <Sparkles className="w-4 h-4" />
+              <span>Penjelasan Mendalam AI</span>
+            </div>
+            <p className="text-sm sm:text-base text-slate-200 leading-relaxed">{reason}</p>
+          </div>
         )}
-        <div className="absolute bottom-4 flex flex-col items-center">
-          <p className="text-4xl sm:text-5xl font-black text-white">
-            {confidence_level}
-          </p>
-          <p className="text-[#1ecfc1] tracking-widest text-xs">
-            CONFIDENCE LEVEL
-          </p>
+
+        {/* Red Flags & Green Flags Breakdown Grid */}
+        {(red_flags.length > 0 || green_flags.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            {/* Red Flags List */}
+            {red_flags.length > 0 && (
+              <div className="rounded-2xl p-5 bg-red-500/5 border border-red-500/20 space-y-3">
+                <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Red Flags Ditemukan ({red_flags.length})</span>
+                </div>
+                <ul className="space-y-2 text-xs sm:text-sm text-red-200">
+                  {red_flags.map((flag, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-red-400 mt-0.5">•</span>
+                      <span>{flag}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Green Flags List */}
+            {green_flags.length > 0 && (
+              <div className="rounded-2xl p-5 bg-emerald-500/5 border border-emerald-500/20 space-y-3">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Green Flags Terverifikasi ({green_flags.length})</span>
+                </div>
+                <ul className="space-y-2 text-xs sm:text-sm text-emerald-200">
+                  {green_flags.map((flag, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-0.5">•</span>
+                      <span>{flag}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Actionable Guidance Card (Heuristic #9) */}
+        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-start gap-3 text-xs sm:text-sm text-blue-200">
+          <Lightbulb className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold text-blue-300">Langkah Pengamanan Selanjutnya</p>
+            <p>
+              Jangan pernah mengirimkan uang untuk alasan apapun (tiket, akomodasi, biaya tes). Jika Anda diminta mentransfer uang, laporkan lowongan ini dan abaikan komunikasi lebih lanjut.
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom Navigation CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/10">
+          <Link to="/test" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto bg-[#1ecfc1] text-gray-950 font-bold hover:bg-[#1ecfc1]/90 px-6 py-5 rounded-xl">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Scan Lowongan Lainnya
+            </Button>
+          </Link>
+          <Link to="/community" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto border-white/15 px-6 py-5 rounded-xl">
+              Lihat Database Komunitas
+            </Button>
+          </Link>
         </div>
       </motion.div>
-      <div className="px-4 sm:px-10 text-center mt-6 sm:mt-10 text-sm sm:text-base max-w-2xl">
-        {confidenceText}
-      </div>
-
-      {(hasRedFlags || hasGreenFlags) && (
-        <motion.div
-          className="max-w-2xl w-full mx-auto mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            transition: { delay: 0.8, duration: 0.8 },
-          }}
-        >
-          {hasRedFlags && (
-            <div className="border border-red-500/30 rounded-lg px-5 py-4 bg-red-500/5">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-4 h-4 text-red-400" />
-                <p className="text-sm font-semibold text-red-400 tracking-widest">
-                  RED FLAGS
-                </p>
-              </div>
-              <ul className="space-y-2">
-                {red_flags.map((flag, i) => (
-                  <li
-                    key={i}
-                    className="text-sm text-red-300/80 flex items-start gap-2"
-                  >
-                    <span className="text-red-400 mt-1 shrink-0">•</span>
-                    {flag}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {hasGreenFlags && (
-            <div className="border border-emerald-500/30 rounded-lg px-5 py-4 bg-emerald-500/5">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <p className="text-sm font-semibold text-emerald-400 tracking-widest">
-                  GREEN FLAGS
-                </p>
-              </div>
-              <ul className="space-y-2">
-                {green_flags.map((flag, i) => (
-                  <li
-                    key={i}
-                    className="text-sm text-emerald-300/80 flex items-start gap-2"
-                  >
-                    <span className="text-emerald-400 mt-1 shrink-0">•</span>
-                    {flag}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {reason && (
-        <motion.div
-          className="max-w-2xl w-full mx-auto mt-6 sm:mt-8 px-6 sm:px-8 py-6 border rounded-lg"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            transition: { delay: 1, duration: 0.8 },
-          }}
-        >
-          <p className="text-sm font-semibold text-[#1ecfc1] mb-2 tracking-widest">
-            AI ANALYSIS
-          </p>
-          <p className="text-sm sm:text-base leading-relaxed">{reason}</p>
-        </motion.div>
-      )}
     </section>
   );
 }
-
-export default Result;

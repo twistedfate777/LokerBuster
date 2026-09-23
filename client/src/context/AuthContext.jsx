@@ -58,6 +58,7 @@ export function AuthProvider({ children }) {
         await api.post("/auth/logout/");
       }
     } catch {
+      /* ignore logout network failure */
     } finally {
       localStorage.removeItem(DEMO_USER_STORAGE_KEY);
       setUser(null);
