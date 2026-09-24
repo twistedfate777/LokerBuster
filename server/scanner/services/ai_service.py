@@ -6,7 +6,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-GROQ_MODEL = 'qwen/qwen3.8-27b'
+GROQ_MODEL = 'openai/gpt-oss-120b'
 GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 MAX_RETRIES = 2
 REQUEST_TIMEOUT = 60
