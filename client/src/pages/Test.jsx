@@ -56,9 +56,27 @@ const OCR_ERRORS = {
     retryable: false,
   },
   ocr_unavailable: {
-    title: "Screenshot reader unavailable",
-    message: "The OCR engine could not be started.",
-    hint: "Check the backend's Tesseract setup, or paste the job text instead.",
+    title: "OCR services unavailable",
+    message: "Neither local Tesseract nor OCR Space is available to read this screenshot.",
+    hint: "Check the backend's TESSERACT_CMD and OCR_API_KEY settings.",
+    retryable: false,
+  },
+  ocr_space_timeout: {
+    title: "OCR Space timed out",
+    message: "The cloud OCR service did not respond before its time limit.",
+    hint: "Wait a moment, then retry the screenshot scan.",
+    retryable: true,
+  },
+  ocr_space_unavailable: {
+    title: "OCR Space is unreachable",
+    message: "The backend could not connect to the cloud OCR service.",
+    hint: "Check the backend's internet connection, then retry the screenshot scan.",
+    retryable: true,
+  },
+  ocr_space_processing_failed: {
+    title: "OCR Space could not process the screenshot",
+    message: "The cloud OCR service returned an invalid response or could not read this image.",
+    hint: "Try another screenshot or paste the job text instead.",
     retryable: true,
   },
   ocr_processing_failed: {

@@ -3,7 +3,7 @@ import logging
 import os
 import requests
 from django.conf import settings
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import pytesseract
 
 logger = logging.getLogger(__name__)
@@ -42,6 +42,12 @@ def _configure_tesseract():
 
 def _extract_via_ocr_space(image_file):
     api_key = getattr(settings, 'OCR_API_KEY', 'helloworld')
+    if not api_key:
+        raise OCRServiceError(
+            'Neither local Tesseract nor OCR Space is available.',
+            code='ocr_unavailable',
+        )
+
     ocr_url = 'https://api.ocr.space/parse/image'
 
     try:
@@ -64,24 +70,53 @@ def _extract_via_ocr_space(image_file):
         response.raise_for_status()
     except requests.exceptions.Timeout:
         logger.error('OCR Space API request timed out.')
-        raise OCRServiceError('Layanan OCR tidak merespons. Silakan coba lagi.')
+        raise OCRServiceError(
+            'Layanan OCR Space tidak merespons. Silakan coba lagi.',
+            code='ocr_space_timeout',
+        )
     except requests.exceptions.RequestException as e:
         logger.error(f'OCR Space API request failed: {e}')
-        raise OCRServiceError('Gagal menghubungi layanan OCR. Silakan coba lagi.')
+        raise OCRServiceError(
+            'Gagal menghubungi layanan OCR Space. Silakan coba lagi.',
+            code='ocr_space_unavailable',
+        )
 
-    result = response.json()
+    try:
+        result = response.json()
+    except ValueError as e:
+        logger.error(f'OCR Space API returned invalid JSON: {e}')
+        raise OCRServiceError(
+            'Layanan OCR Space mengembalikan respons yang tidak valid.',
+            code='ocr_space_processing_failed',
+        )
+
+    if not isinstance(result, dict):
+        raise OCRServiceError(
+            'Layanan OCR Space mengembalikan respons yang tidak valid.',
+            code='ocr_space_processing_failed',
+        )
+
     if result.get('IsErroredOnProcessing', False):
         error_msg = result.get('ErrorMessage', ['Unknown OCR error'])
         logger.error(f'OCR Space API processing error: {error_msg}')
-        raise OCRServiceError(f'OCR gagal memproses gambar: {error_msg}')
+        raise OCRServiceError(
+            f'OCR Space gagal memproses gambar: {error_msg}',
+            code='ocr_space_processing_failed',
+        )
 
     parsed_results = result.get('ParsedResults', [])
     if not parsed_results:
-        raise OCRServiceError('OCR tidak menemukan teks dalam gambar. Pastikan gambar berisi teks yang jelas.')
+        raise OCRServiceError(
+            'OCR tidak menemukan teks dalam gambar. Pastikan gambar berisi teks yang jelas.',
+            code='no_text_found',
+        )
 
     extracted_text = parsed_results[0].get('ParsedText', '').strip()
     if not extracted_text:
-        raise OCRServiceError('OCR tidak menemukan teks dalam gambar. Pastikan gambar berisi teks yang jelas.')
+        raise OCRServiceError(
+            'OCR tidak menemukan teks dalam gambar. Pastikan gambar berisi teks yang jelas.',
+            code='no_text_found',
+        )
 
     logger.info(f'OCR Space extracted {len(extracted_text)} characters from image.')
     return extracted_text
@@ -110,19 +145,15 @@ def extract_text_from_image(image_file):
                 extracted_text = pytesseract.image_to_string(image, lang='eng')
             else:
                 raise
-    except pytesseract.TesseractNotFoundError:
-        logger.error('Tesseract OCR engine binary not found.')
-        raise OCRServiceError('Layanan OCR tidak tersedia pada sistem.', code='ocr_unavailable')
-    except pytesseract.TesseractError as e:
-        logger.error(f'Tesseract OCR processing error: {e}')
-        raise OCRServiceError('OCR gagal memproses gambar.', code='ocr_processing_failed')
+    except pytesseract.TesseractNotFoundError as e:
+        logger.warning(f'Tesseract OCR engine unavailable. Falling back to OCR Space: {e}')
+    except Exception as e:
+        logger.warning(f'Tesseract extraction failed. Falling back to OCR Space: {e}')
+    else:
+        extracted_text = extracted_text.strip()
+        if extracted_text:
+            logger.info(f'Tesseract extracted {len(extracted_text)} characters from image.')
+            return extracted_text
+        logger.info('Tesseract found no text. Falling back to OCR Space.')
 
-    extracted_text = extracted_text.strip()
-    if not extracted_text:
-        raise OCRServiceError(
-            'OCR tidak menemukan teks dalam gambar. Pastikan gambar berisi teks yang jelas.',
-            code='no_text_found',
-        )
-
-    logger.info(f'OCR extracted {len(extracted_text)} characters from image.')
-    return extracted_text
+    return _extract_via_ocr_space(image_file)
