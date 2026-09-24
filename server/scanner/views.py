@@ -21,8 +21,10 @@ def _success(data, code=status.HTTP_200_OK):
     return Response({'success': True, 'data': data}, status=code)
 
 
-def _error(message, code=status.HTTP_400_BAD_REQUEST, errors=None):
+def _error(message, code=status.HTTP_400_BAD_REQUEST, errors=None, error_code=None):
     payload = {'success': False, 'error': {'message': message}}
+    if error_code:
+        payload['error']['code'] = error_code
     if errors:
         payload['error']['details'] = errors
     return Response(payload, status=code)
@@ -43,7 +45,11 @@ class AnalyzeView(APIView):
             try:
                 raw_text = extract_text_from_image(image_file)
             except OCRServiceError as e:
-                return _error(str(e), status.HTTP_422_UNPROCESSABLE_ENTITY)
+                return _error(
+                    str(e),
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    error_code=e.code,
+                )
 
             try:
                 image_url = upload_image(image_file)
@@ -64,9 +70,17 @@ class AnalyzeView(APIView):
         try:
             ai_result = analyze_with_groq(raw_text)
         except InvalidJobPostingError as e:
-            return _error(str(e), status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return _error(
+                str(e),
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                error_code='not_job_posting',
+            )
         except AIServiceError as e:
-            return _error(str(e), status.HTTP_502_BAD_GATEWAY)
+            return _error(
+                str(e),
+                status.HTTP_502_BAD_GATEWAY,
+                error_code=e.code,
+            )
 
         user = request.user if request.user.is_authenticated else None
 

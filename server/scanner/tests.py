@@ -8,6 +8,7 @@ import pytesseract
 from rest_framework.test import APIClient
 from unittest.mock import patch
 from .models import JobReport
+from .services.ai_service import AIServiceError, InvalidJobPostingError
 from .services.ocr_service import extract_text_from_image, OCRServiceError
 
 
@@ -189,6 +190,51 @@ class AnalyzeViewTest(TestCase):
         self.assertTrue(data['success'])
         self.assertEqual(data['data']['source_type'], 'image')
         self.assertEqual(data['data']['image_url'], 'https://res.cloudinary.com/test/image.jpg')
+
+    @patch('scanner.views.upload_image')
+    @patch('scanner.views.analyze_with_groq')
+    @patch('scanner.views.extract_text_from_image')
+    def test_non_job_image_returns_specific_error_code(self, mock_extract, mock_groq, mock_upload):
+        mock_extract.return_value = 'A photo without any job listing details.'
+        mock_upload.return_value = 'https://res.cloudinary.com/test/image.jpg'
+        mock_groq.side_effect = InvalidJobPostingError(
+            'Input tidak mengandung informasi lowongan kerja yang dapat dianalisis.'
+        )
+        image_file = SimpleUploadedFile('photo.png', b'fake image data', content_type='image/png')
+
+        response = self.client.post(self.url, {'image': image_file}, format='multipart')
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()['error']['code'], 'not_job_posting')
+
+    @patch('scanner.views.analyze_with_groq')
+    def test_extractor_connection_error_returns_specific_error_code(self, mock_groq):
+        mock_groq.side_effect = AIServiceError(
+            'Tidak dapat terhubung ke Groq API.',
+            code='extractor_connection_failed',
+        )
+
+        response = self.client.post(
+            self.url,
+            {'text': 'Lowongan kerja staff admin pada perusahaan lokal.'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json()['error']['code'], 'extractor_connection_failed')
+
+    @patch('scanner.views.extract_text_from_image')
+    def test_ocr_unavailable_returns_specific_error_code(self, mock_extract):
+        mock_extract.side_effect = OCRServiceError(
+            'Layanan OCR tidak tersedia pada sistem.',
+            code='ocr_unavailable',
+        )
+        image_file = SimpleUploadedFile('poster.png', b'fake image data', content_type='image/png')
+
+        response = self.client.post(self.url, {'image': image_file}, format='multipart')
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()['error']['code'], 'ocr_unavailable')
 
 
 class CommunityLedgerViewTest(TestCase):

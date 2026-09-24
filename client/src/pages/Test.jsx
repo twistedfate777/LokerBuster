@@ -37,15 +37,94 @@ const MAX_TEXT_LENGTH = 10000;
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg"]);
 
+const OCR_ERRORS = {
+  unsupported_image_type: {
+    title: "Unsupported image type",
+    message: "This image format isn't supported.",
+    hint: "Choose a PNG or JPEG image.",
+    retryable: false,
+  },
+  image_too_large: {
+    title: "Screenshot is too large",
+    message: "The selected image exceeds the 5 MB upload limit.",
+    hint: "Choose a smaller screenshot, then try again.",
+    retryable: false,
+  },
+  invalid_image: {
+    title: "Invalid screenshot",
+    message: "The uploaded file could not be opened as an image.",
+    hint: "Choose a valid PNG or JPEG screenshot.",
+    retryable: false,
+  },
+  ocr_unavailable: {
+    title: "Screenshot reader unavailable",
+    message: "The OCR engine could not be started.",
+    hint: "Check the backend's Tesseract setup, or paste the job text instead.",
+    retryable: true,
+  },
+  ocr_processing_failed: {
+    title: "Screenshot could not be read",
+    message: "OCR failed while extracting text from this image.",
+    hint: "Use a sharper screenshot or paste the job text instead.",
+    retryable: false,
+  },
+  no_text_found: {
+    title: "No text found in screenshot",
+    message: "The image does not contain readable job-posting text.",
+    hint: "Upload a screenshot showing the job details, or paste the text instead.",
+    retryable: false,
+  },
+};
+
+const EXTRACTOR_ERRORS = {
+  extractor_not_configured: {
+    title: "AI service is not configured",
+    message: "The AI analyzer is missing its Groq credentials.",
+    hint: "Configure GROQ_API_KEY in the backend environment.",
+    retryable: false,
+  },
+  extractor_connection_failed: {
+    title: "AI service unreachable",
+    message: "The scanner could not connect to Groq.",
+    hint: "Check the backend's internet connection, then try again.",
+    retryable: true,
+  },
+  extractor_timeout: {
+    title: "AI service timed out",
+    message: "Groq did not respond before the request timed out.",
+    hint: "Wait for the connection to recover, then try again.",
+    retryable: true,
+  },
+  extractor_request_failed: {
+    title: "AI provider rejected the request",
+    message: "Groq could not process the analysis request.",
+    hint: "Check the Groq API key, model access, and account limits.",
+    retryable: true,
+  },
+  extractor_invalid_response: {
+    title: "AI response could not be processed",
+    message: "The AI analyzer returned a response the scanner could not use.",
+    hint: "Try again. If it continues, check the configured Groq model.",
+    retryable: true,
+  },
+  extractor_failure: {
+    title: "AI analysis failed",
+    message: "The AI analyzer could not complete this scan.",
+    hint: "Try again. If the issue continues, check the extractor service logs.",
+    retryable: true,
+  },
+};
+
 const getAnalysisError = (error) => {
   const status = error.response?.status;
   const serverMessage = error.response?.data?.error?.message;
+  const serverErrorCode = error.response?.data?.error?.code;
 
   if (!error.response) {
     return {
-      title: "Connection problem",
-      message: "We could not reach the analysis service.",
-      hint: "Check your internet connection, then try the scan again.",
+      title: "Scanner server unavailable",
+      message: "We could not reach the LokerBuster backend.",
+      hint: "Check that the backend is running, then try again.",
       retryable: true,
     };
   }
@@ -60,19 +139,34 @@ const getAnalysisError = (error) => {
   }
 
   if (status === 422) {
+    if (serverErrorCode === "not_job_posting") {
+      return {
+        title: "Not a job listing",
+        message: "This item doesn't appear to contain a job listing we can analyze.",
+        hint: "Upload a job ad or paste a recruiter message with role details.",
+        retryable: false,
+      };
+    }
+
+    if (OCR_ERRORS[serverErrorCode]) return OCR_ERRORS[serverErrorCode];
+
     return {
       title: "This content could not be analyzed",
-      message: serverMessage || "The screenshot or job text did not contain enough usable information.",
-      hint: "Use a clearer screenshot or paste the complete job posting.",
+      message: serverMessage || "The submitted content could not be analyzed.",
+      hint: "Check the submitted job details and try again.",
       retryable: false,
     };
   }
 
+  if (status === 502) {
+    return EXTRACTOR_ERRORS[serverErrorCode] || EXTRACTOR_ERRORS.extractor_failure;
+  }
+
   if (status >= 500) {
     return {
-      title: "Analysis service unavailable",
-      message: "Our OCR or AI service is temporarily unavailable.",
-      hint: serverMessage || "Wait a moment and try the scan again.",
+      title: "Scanner server error",
+      message: "The backend could not complete this scan.",
+      hint: "Try again later. If the problem continues, check the backend logs.",
       retryable: true,
     };
   }

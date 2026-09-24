@@ -52,7 +52,9 @@ JANGAN menambahkan teks apapun di luar JSON. JANGAN gunakan markdown code block.
 
 
 class AIServiceError(Exception):
-    pass
+    def __init__(self, message, code='extractor_failure'):
+        super().__init__(message)
+        self.code = code
 
 
 class InvalidJobPostingError(AIServiceError):
@@ -80,7 +82,10 @@ def _extract_json_from_response(text):
         except json.JSONDecodeError:
             continue
 
-    raise AIServiceError('AI mengembalikan respons yang tidak valid. Silakan coba lagi.')
+    raise AIServiceError(
+        'AI mengembalikan respons yang tidak valid. Silakan coba lagi.',
+        code='extractor_invalid_response',
+    )
 
 
 def _validate_ai_result(result):
@@ -92,7 +97,10 @@ def _validate_ai_result(result):
     required_fields = ['scam_score', 'confidence_level', 'reason']
     for field in required_fields:
         if field not in result:
-            raise AIServiceError(f'Respons AI tidak lengkap: field "{field}" tidak ditemukan.')
+            raise AIServiceError(
+                f'Respons AI tidak lengkap: field "{field}" tidak ditemukan.',
+                code='extractor_invalid_response',
+            )
 
     result['scam_score'] = max(0, min(100, int(result['scam_score'])))
     result['confidence_level'] = max(0, min(100, int(result['confidence_level'])))
@@ -113,7 +121,10 @@ def _validate_ai_result(result):
 def analyze_with_groq(text_input):
     api_key = getattr(settings, 'GROQ_API_KEY', '')
     if not api_key:
-        raise AIServiceError('GROQ_API_KEY belum dikonfigurasi di settings/environment.')
+        raise AIServiceError(
+            'GROQ_API_KEY belum dikonfigurasi di settings/environment.',
+            code='extractor_not_configured',
+        )
 
     payload = {
         'model': GROQ_MODEL,
@@ -143,16 +154,25 @@ def analyze_with_groq(text_input):
             )
             response.raise_for_status()
         except requests.exceptions.ConnectionError:
-            last_error = AIServiceError('Tidak dapat terhubung ke Groq API.')
+            last_error = AIServiceError(
+                'Tidak dapat terhubung ke Groq API.',
+                code='extractor_connection_failed',
+            )
             logger.error(f'Groq connection failed (attempt {attempt})')
             continue
         except requests.exceptions.Timeout:
-            last_error = AIServiceError('Groq API tidak merespons dalam waktu yang ditentukan.')
+            last_error = AIServiceError(
+                'Groq API tidak merespons dalam waktu yang ditentukan.',
+                code='extractor_timeout',
+            )
             logger.error(f'Groq request timed out (attempt {attempt})')
             continue
         except requests.exceptions.RequestException as e:
             body = getattr(e.response, 'text', '') if hasattr(e, 'response') else ''
-            last_error = AIServiceError(f'Gagal menghubungi Groq API: {e}')
+            last_error = AIServiceError(
+                f'Gagal menghubungi Groq API: {e}',
+                code='extractor_request_failed',
+            )
             logger.error(f'Groq request error (attempt {attempt}): {e} | body: {body[:300]}')
             continue
 
@@ -174,7 +194,8 @@ def analyze_with_groq(text_input):
             raise
         except (json.JSONDecodeError, KeyError, ValueError, TypeError, IndexError) as e:
             last_error = AIServiceError(
-                'AI mengembalikan respons yang tidak dapat diproses. Silakan coba lagi.'
+                'AI mengembalikan respons yang tidak dapat diproses. Silakan coba lagi.',
+                code='extractor_invalid_response',
             )
             logger.error(f'Failed to parse Groq response (attempt {attempt}): {e}')
             continue
