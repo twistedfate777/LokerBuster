@@ -16,15 +16,36 @@
   - Updated `server/user/authentication.py` to use dynamic cookie names and fallback gracefully to standard `Authorization: Bearer` headers.
   - Updated `server/server/.env.example` with the new cookie and origin configuration keys.
 - Containerization and Cloud Deploy:
-  - Added `server/Dockerfile` using Python 3.12 slim with necessary build tools and development server CMD.
+  - Configured `server/Dockerfile` using `python:3.12-slim` with build dependencies (`gcc`, `libpq-dev`, `curl`, `zlib1g-dev`, `libjpeg-dev`, `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-ind`) and development server CMD.
   - Added `server/.dockerignore` to keep builds lean.
   - Added `server/app.yaml` configured for App Engine / Cloud deployments with Python 3.12, static handlers, and gunicorn entrypoint.
+- Migrated OCR from OCR Space API to Pytesseract:
+  - Added `Pillow==11.1.0` and `pytesseract==0.3.13` to `server/requirements.txt` with UTF-8 encoding.
+  - Replaced `OCR_API_KEY` with `TESSERACT_CMD` and `TESSERACT_LANG` in `server/server/settings.py` and `server/server/.env.example`.
+  - Rewrote `server/scanner/services/ocr_service.py` using `Pillow` and `pytesseract`, with RGB mode conversion, language fallback from `ind` to `eng`, missing binary and corruption exception handling, and preserved API response contracts.
+  - Enhanced `_configure_tesseract()` in `server/scanner/services/ocr_service.py` to automatically detect default Windows installation paths (`C:\Program Files\Tesseract-OCR\tesseract.exe`, etc.) so it immediately works upon host installation without manual path tweaking.
+  - Added unit and integration tests in `server/scanner/tests.py` covering format validation, successful extraction, empty text detection, and Tesseract binary error scenarios.
+- Synchronized Active `.env` & Cleaned `client/.env`:
+  - Updated `server/server/.env` to activate `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS`.
+  - Added missing cross-domain cookie variables (`AUTH_COOKIE_DOMAIN`, `AUTH_COOKIE_SECURE`, `AUTH_COOKIE_SAMESITE`).
+  - Added `GROQ_MODEL=llama-3.1-8b-instant`.
+  - Added `api-lokerbuster.vercel.app` to `ALLOWED_HOSTS`.
+  - Removed obsolete `OCR_API_KEY` and eliminated all commented-out lines to maintain strict zero-comment compliance.
+  - Cleaned `client/.env` to eliminate the `NODE_ENV` Vite warning.
+- Implemented Multi-Component Health Check API:
+  - Created `server/scanner/services/health_service.py` containing modular checks:
+    - `check_database_health()`: tests DB backend connection latency without raw SQL (`connection.ensure_connection()`).
+    - `check_ocr_health()`: verifies Tesseract binary existence, version, language packs, and latency.
+    - `check_llm_health()`: pings Groq API models endpoint verifying API key validity, connectivity, and latency.
+  - Added `HealthCheckView` class-based APIView in `server/scanner/views.py`.
+  - Exposed health routes at `/api/health/` and `/health/`.
+  - Added `HealthCheckViewTest` in `server/scanner/tests.py` covering healthy, degraded OCR, and degraded DB scenarios.
 
 ## Logic for Recent Design/Code Decisions
-- Cookie Domain Handling: `vercel.app` is listed in the Public Suffix List (PSL). Setting `domain=".vercel.app"` is rejected by browsers as a security violation. Therefore, `AUTH_COOKIE_DOMAIN` is set to `None` by default (host-only cookie), while `SameSite=None; Secure; HttpOnly` is enforced, allowing `https://lokerbuster.vercel.app` to include credentials when fetching `https://api-lokerbuster.vercel.app`. For custom apex domains, `AUTH_COOKIE_DOMAIN` can be set via environment variables.
-- Token Blacklisting: Added `rest_framework_simplejwt.token_blacklist` to `THIRD_PARTY_APPS` and wired `token.blacklist()` into `LogoutView` to satisfy the project rule that tokens must actually be invalidated server-side upon logout.
+- Multi-Service Health Aggregation: The health endpoint returns granular statuses, latencies, and metadata for `database`, `ocr`, and `extractor` (LLM). If all services are operational, it returns HTTP 200 with `status: "healthy"`. If any service is unavailable (e.g. Tesseract binary not installed on host machine), it returns HTTP 503 with `status: "degraded"` and specific error messages, enabling easy diagnosis by developers and automated uptime monitors.
+- Python 3.12 Base Image: Maintained `python:3.12-slim` with `zlib1g-dev` and `libjpeg-dev` to guarantee instant binary wheel installations.
 - Zero Comments: Maintained strict compliance across all modified and created files with no `#` or inline comments.
 
 ## Known Blockers and Next Steps
-- Run `python manage.py migrate` in environments using token blacklisting so `rest_framework_simplejwt.token_blacklist` creates its blacklist tables.
-- Verify production deployment environment variables (`ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `DATABASE_URL`).
+- On local Windows host, install Tesseract OCR binary (e.g. `winget install UB-Mannheim.TesseractOCR`).
+- Run `python manage.py test scanner` to verify OCR and Health check test suites in the target runtime environment.
