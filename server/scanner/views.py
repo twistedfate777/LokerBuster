@@ -119,3 +119,43 @@ class StatsView(APIView):
             aggregates['average_scam_score'] or 0, 1
         )
         return _success(aggregates)
+
+
+class HealthCheckView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from django.utils import timezone
+        from .services.health_service import (
+            check_database_health,
+            check_ocr_health,
+            check_llm_health,
+        )
+
+        db_health = check_database_health()
+        ocr_health = check_ocr_health()
+        llm_health = check_llm_health()
+
+        services = {
+            'database': db_health,
+            'ocr': ocr_health,
+            'extractor': llm_health,
+        }
+
+        all_healthy = all(s.get('status') == 'healthy' for s in services.values())
+        overall_status = 'healthy' if all_healthy else 'degraded'
+
+        payload = {
+            'success': all_healthy,
+            'status': overall_status,
+            'timestamp': timezone.now().isoformat(),
+            'services': services,
+        }
+
+        http_code = (
+            status.HTTP_200_OK
+            if all_healthy
+            else status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+        return Response(payload, status=http_code)
+

@@ -1,4 +1,4 @@
-runtime: python312
+runtime: python314
 instance_class: F1
 entrypoint: gunicorn -b :$PORT server.wsgi:application
 
