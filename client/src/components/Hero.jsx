@@ -26,14 +26,8 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Live Threat Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#1ecfc1]/30 bg-[#1ecfc1]/10 px-3.5 py-1.5 text-xs font-medium text-[#1ecfc1] backdrop-blur-md mb-6">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1ecfc1] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1ecfc1]" />
-              </span>
-              <span>AI Threat Defense Engine v2.4</span>
-            </div>
+            
+            
 
             {/* Headline */}
             <h1 className="text-balance text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">

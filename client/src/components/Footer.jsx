@@ -80,7 +80,7 @@ function Footer() {
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-mono text-[11px] text-gray-400">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#1ecfc1]" />
-              AI Validation Engine
+              RusdiDeveloperHub
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
               v2.4.0 Live
