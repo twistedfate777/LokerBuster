@@ -104,12 +104,27 @@ class OCRServiceTest(TestCase):
         result = extract_text_from_image(image_file)
         self.assertEqual(result, 'Lowongan Kerja PT Sukses Makmur')
 
+    @patch('scanner.services.ocr_service.requests.post')
     @patch('pytesseract.image_to_string')
-    def test_empty_ocr_text_raises_error(self, mock_image_to_string):
+    def test_empty_ocr_text_raises_error(self, mock_image_to_string, mock_post):
         mock_image_to_string.return_value = '   \n  '
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {
+            'IsErroredOnProcessing': False,
+            'ParsedResults': [{'ParsedText': ''}],
+        }
         image_file = self._create_mock_image()
-        with self.assertRaises(OCRServiceError):
+        with self.assertRaises(OCRServiceError) as error:
             extract_text_from_image(image_file)
+        self.assertEqual(error.exception.code, 'no_text_found')
+
+    def test_invalid_image_has_specific_error_code(self):
+        image_file = SimpleUploadedFile('broken.png', b'not an image', content_type='image/png')
+
+        with self.assertRaises(OCRServiceError) as error:
+            extract_text_from_image(image_file)
+
+        self.assertEqual(error.exception.code, 'invalid_image')
 
     @patch('scanner.services.ocr_service.requests.post')
     @patch('pytesseract.image_to_string')
@@ -123,6 +138,7 @@ class OCRServiceTest(TestCase):
         image_file = self._create_mock_image()
         result = extract_text_from_image(image_file)
         self.assertEqual(result, 'Teks dari OCR Space API')
+        mock_post.assert_called_once()
 
     @patch('scanner.services.ocr_service.requests.post')
     @patch('pytesseract.image_to_string')
@@ -131,8 +147,9 @@ class OCRServiceTest(TestCase):
         mock_image_to_string.side_effect = pytesseract.TesseractNotFoundError()
         mock_post.side_effect = requests.exceptions.RequestException('OCR Space connection failed')
         image_file = self._create_mock_image()
-        with self.assertRaises(OCRServiceError):
+        with self.assertRaises(OCRServiceError) as error:
             extract_text_from_image(image_file)
+        self.assertEqual(error.exception.code, 'ocr_space_unavailable')
 
 
 
