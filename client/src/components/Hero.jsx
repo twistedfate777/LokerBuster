@@ -32,9 +32,18 @@ function Hero() {
   return (
     <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-28">
       {/* Ambient background lighting */}
-      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -z-10 h-[500px] w-full max-w-7xl overflow-hidden opacity-30">
-        <div className="absolute top-[-20%] left-[-10%] h-[400px] w-[500px] rounded-full bg-[#1ecfc1]/20 blur-[130px]" />
-        <div className="absolute top-[10%] right-[-10%] h-[350px] w-[450px] rounded-full bg-blue-600/15 blur-[120px]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        {/* Subtle high-tech grid with radial fade */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_25%,#000_30%,transparent_100%)] opacity-70" />
+
+        {/* Top-center soft conic/radial ambient bloom */}
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 h-[550px] w-[900px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(30,207,193,0.16)_0%,rgba(14,165,233,0.08)_40%,transparent_70%)] blur-[120px]" />
+
+        {/* Left side soft glow for typography */}
+        <div className="absolute top-[5%] -left-[10%] h-[420px] w-[500px] rounded-full bg-[#1ecfc1]/10 blur-[140px]" />
+
+        {/* Right side glow supporting mascot */}
+        <div className="absolute top-[8%] -right-[5%] h-[480px] w-[560px] rounded-full bg-cyan-500/10 blur-[150px]" />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -106,13 +115,33 @@ function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: "easeOut" }}
           >
-            {/* Ambient Backlight Glow behind the shield */}
-            <div className="pointer-events-none absolute h-[360px] w-[360px] rounded-full bg-[#1ecfc1]/15 blur-[125px]" />
-            <div className="pointer-events-none absolute h-[280px] w-[280px] rounded-full bg-blue-500/10 blur-[105px]" />
+            {/* Ambient Backlight Glow behind the mascot */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="absolute h-[540px] w-[540px] rounded-full bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.28)_0%,rgba(255,241,184,0.16)_24%,rgba(30,207,193,0.1)_48%,transparent_74%)] blur-[18px]" />
-              <div className="absolute h-[650px] w-[650px] rounded-full opacity-35 [background:repeating-conic-gradient(from_0deg,rgba(255,255,255,0.1)_0deg,rgba(255,255,255,0.1)_3deg,transparent_10deg,transparent_30deg)] [mask-image:radial-gradient(ellipse_at_center,black_0%,transparent_68%)] blur-[1px] animate-[spin_36s_linear_infinite]" />
-              <div className="absolute h-[430px] w-[430px] rounded-full border border-white/10 shadow-[0_0_70px_rgba(255,255,255,0.08),inset_0_0_70px_rgba(30,207,193,0.08)] blur-[0.5px]" />
+              {/* Outer soft diffuse aurora */}
+              <div className="absolute h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(30,207,193,0.18)_0%,rgba(14,165,233,0.1)_40%,rgba(99,102,241,0.04)_65%,transparent_80%)] blur-[60px]" />
+
+              {/* Pulsing inner cyber core */}
+              <motion.div
+                animate={{ scale: [1, 1.08, 1], opacity: [0.7, 0.95, 0.7] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(30,207,193,0.32)_0%,rgba(56,189,248,0.16)_45%,transparent_70%)] blur-[40px]"
+              />
+
+              {/* Faint rotating tech ring */}
+              <div className="absolute h-[460px] w-[460px] rounded-full border border-teal-400/15 [border-style:dashed] animate-[spin_70s_linear_infinite]" />
+
+              {/* Elegant luminous orbit ring */}
+              <div className="absolute h-[380px] w-[380px] rounded-full border border-white/10 shadow-[0_0_40px_rgba(30,207,193,0.14),inset_0_0_25px_rgba(30,207,193,0.06)]" />
+
+              {/* Breathing shield wave */}
+              <motion.div
+                animate={{ scale: [0.93, 1.03, 0.93], opacity: [0.25, 0.55, 0.25] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute h-[310px] w-[310px] rounded-full border border-[#1ecfc1]/25"
+              />
+
+              {/* Grounding pedestal glow beneath mascot */}
+              <div className="absolute -bottom-3 h-[24px] w-[300px] rounded-[100%] bg-gradient-to-r from-transparent via-[#1ecfc1]/35 to-transparent blur-md" />
             </div>
 
             {/* Interactive 2D image */}
