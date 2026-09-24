@@ -201,8 +201,20 @@ function Result() {
               <span className="font-mono text-xs text-gray-400 uppercase tracking-wider">
                 AI Confidence Level
               </span>
-              <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[#1ecfc1]/20 text-[#1ecfc1]">
-                Neural Model v2.4
+              <span
+                className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${
+                  confidence_level >= 70
+                    ? "bg-[#1ecfc1]/20 text-[#1ecfc1]"
+                    : confidence_level >= 40
+                    ? "bg-amber-500/20 text-amber-400"
+                    : "bg-red-500/20 text-red-400"
+                }`}
+              >
+                {confidence_level >= 70
+                  ? "HIGH CONFIDENCE"
+                  : confidence_level >= 40
+                  ? "MODERATE CONFIDENCE"
+                  : "LOW CONFIDENCE"}
               </span>
             </div>
 

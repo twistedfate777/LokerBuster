@@ -11,7 +11,6 @@ import {
   AlertCircle,
   RotateCcw,
   Cpu,
-  Lock,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -188,7 +187,6 @@ function Test() {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [hasAcknowledgedPrivacy, setHasAcknowledgedPrivacy] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -285,15 +283,6 @@ function Test() {
     if (e) e.preventDefault();
     setError(null);
 
-    if (!hasAcknowledgedPrivacy) {
-      setError({
-        title: "Please review the privacy notice",
-        message: "Scans are stored and report data may be publicly accessible.",
-        hint: "Review and acknowledge the privacy notice before scanning.",
-        retryable: false,
-      });
-      return;
-    }
 
     if (activeTab === "text" && text.trim().length < MIN_TEXT_LENGTH) {
       setError({
@@ -634,24 +623,7 @@ function Test() {
             )}
 
             {/* Submit Action Button */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10 pt-6">
-              <div className="max-w-xl rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-3">
-                <p className="text-xs leading-relaxed text-gray-300">
-                  <Lock className="mr-1.5 inline h-3.5 w-3.5 text-amber-300" />
-                  Submitted text is stored with scan reports, which are available through the public community API. Screenshot uploads may also be sent to configured image storage. Do not submit personal or confidential information.
-                </p>
-                <label htmlFor="privacy-acknowledgement" className="mt-2 flex cursor-pointer items-start gap-2 text-xs text-gray-200">
-                  <input
-                    id="privacy-acknowledgement"
-                    type="checkbox"
-                    checked={hasAcknowledgedPrivacy}
-                    onChange={(event) => setHasAcknowledgedPrivacy(event.target.checked)}
-                    disabled={loading}
-                    className="mt-0.5 accent-[#1ecfc1]"
-                  />
-                  <span>I understand my submitted content is stored and may be publicly accessible.</span>
-                </label>
-              </div>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-end gap-4 border-t border-white/10 pt-6">
 
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <Button
