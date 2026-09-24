@@ -217,7 +217,14 @@ function Test() {
         >
           {/* Terminal Title Bar */}
           <div className="flex flex-wrap items-center justify-between border-b border-white/10 bg-white/[0.02] px-6 py-3.5">
-            
+            <div className="flex items-center gap-2 rounded-lg border border-[#1ecfc1]/15 bg-[#1ecfc1]/[0.04] px-2.5 py-1.5 shadow-[0_0_18px_-10px_rgba(30,207,193,0.8)]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md border border-[#1ecfc1]/25 bg-[#1ecfc1]/10 text-[#1ecfc1]">
+                <Cpu className="h-3 w-3" />
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500">
+                Powered by <strong className="font-semibold text-[#1ecfc1]">QWEN</strong>
+              </span>
+            </div>
 
             {/* Input Mode Tabs */}
             <div className="flex items-center rounded-xl border border-white/10 bg-black/40 p-1">

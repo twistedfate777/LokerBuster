@@ -41,7 +41,7 @@ function Footer() {
 
     const fetchHealth = async () => {
       try {
-        const response = await api.get("/health", { timeout: 10000 });
+        const response = await api.get("health/", { timeout: 10000 });
         if (isMounted) setHealth(response.data);
       } catch (error) {
         if (!isMounted) return;
