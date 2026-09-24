@@ -110,12 +110,29 @@ class OCRServiceTest(TestCase):
         with self.assertRaises(OCRServiceError):
             extract_text_from_image(image_file)
 
+    @patch('scanner.services.ocr_service.requests.post')
     @patch('pytesseract.image_to_string')
-    def test_tesseract_not_found_raises_error(self, mock_image_to_string):
+    def test_tesseract_not_found_falls_back_to_ocr_space(self, mock_image_to_string, mock_post):
         mock_image_to_string.side_effect = pytesseract.TesseractNotFoundError()
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {
+            'IsErroredOnProcessing': False,
+            'ParsedResults': [{'ParsedText': 'Teks dari OCR Space API'}],
+        }
+        image_file = self._create_mock_image()
+        result = extract_text_from_image(image_file)
+        self.assertEqual(result, 'Teks dari OCR Space API')
+
+    @patch('scanner.services.ocr_service.requests.post')
+    @patch('pytesseract.image_to_string')
+    def test_both_pytesseract_and_ocr_space_failing_raises_error(self, mock_image_to_string, mock_post):
+        import requests
+        mock_image_to_string.side_effect = pytesseract.TesseractNotFoundError()
+        mock_post.side_effect = requests.exceptions.RequestException('OCR Space connection failed')
         image_file = self._create_mock_image()
         with self.assertRaises(OCRServiceError):
             extract_text_from_image(image_file)
+
 
 
 class AnalyzeViewTest(TestCase):
@@ -265,18 +282,37 @@ class HealthCheckViewTest(TestCase):
     @patch('scanner.services.health_service.requests.get')
     @patch('scanner.services.health_service.pytesseract.get_tesseract_version')
     @patch('scanner.services.health_service.connection.ensure_connection')
+    def test_health_check_ocr_fallback_active(self, mock_db, mock_tess_version, mock_groq):
+        mock_db.return_value = None
+        mock_tess_version.side_effect = pytesseract.TesseractNotFoundError()
+        mock_groq.return_value.status_code = 200
+
+        with self.settings(OCR_API_KEY='test-key'):
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertTrue(data['success'])
+            self.assertEqual(data['status'], 'healthy')
+            self.assertEqual(data['services']['ocr']['status'], 'healthy')
+            self.assertEqual(data['services']['ocr']['engine'], 'ocr_space')
+            self.assertTrue(data['services']['ocr']['fallback_active'])
+
+    @patch('scanner.services.health_service.requests.get')
+    @patch('scanner.services.health_service.pytesseract.get_tesseract_version')
+    @patch('scanner.services.health_service.connection.ensure_connection')
     def test_health_check_ocr_unhealthy(self, mock_db, mock_tess_version, mock_groq):
         mock_db.return_value = None
         mock_tess_version.side_effect = pytesseract.TesseractNotFoundError()
         mock_groq.return_value.status_code = 200
 
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 503)
-        data = response.json()
-        self.assertFalse(data['success'])
-        self.assertEqual(data['status'], 'degraded')
-        self.assertEqual(data['services']['ocr']['status'], 'unhealthy')
-        self.assertEqual(data['services']['database']['status'], 'healthy')
+        with self.settings(OCR_API_KEY=''):
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, 503)
+            data = response.json()
+            self.assertFalse(data['success'])
+            self.assertEqual(data['status'], 'degraded')
+            self.assertEqual(data['services']['ocr']['status'], 'unhealthy')
+            self.assertEqual(data['services']['database']['status'], 'healthy')
 
     @patch('scanner.services.health_service.connection.ensure_connection')
     def test_health_check_db_unhealthy(self, mock_db):
@@ -288,4 +324,5 @@ class HealthCheckViewTest(TestCase):
         self.assertFalse(data['success'])
         self.assertEqual(data['status'], 'degraded')
         self.assertEqual(data['services']['database']['status'], 'unhealthy')
+
 

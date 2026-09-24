@@ -36,14 +36,23 @@ def check_ocr_health():
         latency = round((time.perf_counter() - start) * 1000, 2)
         return {
             'status': 'healthy',
+            'engine': 'tesseract',
             'version': version,
             'languages': languages,
             'latency_ms': latency,
         }
     except pytesseract.TesseractNotFoundError:
+        ocr_key = getattr(settings, 'OCR_API_KEY', '')
+        if ocr_key:
+            return {
+                'status': 'healthy',
+                'engine': 'ocr_space',
+                'fallback_active': True,
+                'message': 'Local Tesseract not found; cloud OCR Space API active.',
+            }
         return {
             'status': 'unhealthy',
-            'error': 'Tesseract OCR binary not found on host system.',
+            'error': 'Neither local Tesseract binary nor OCR_API_KEY is available.',
         }
     except Exception as e:
         return {
