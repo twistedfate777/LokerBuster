@@ -42,6 +42,54 @@ const SCAN_STAGES = [
   "Generating final threat intelligence dossier...",
 ];
 
+const getAnalysisError = (error) => {
+  const status = error.response?.status;
+  const serverMessage = error.response?.data?.error?.message;
+
+  if (!error.response) {
+    return {
+      title: "Connection problem",
+      message: "We could not reach the analysis service.",
+      hint: "Check your internet connection, then try the scan again.",
+      retryable: true,
+    };
+  }
+
+  if (status === 400) {
+    return {
+      title: "Please check your input",
+      message: serverMessage || "Some required job information is missing or invalid.",
+      hint: "Add more job details and submit the scan again.",
+      retryable: false,
+    };
+  }
+
+  if (status === 422) {
+    return {
+      title: "This content could not be analyzed",
+      message: serverMessage || "The screenshot or job text did not contain enough usable information.",
+      hint: "Use a clearer screenshot or paste the complete job posting.",
+      retryable: false,
+    };
+  }
+
+  if (status >= 500) {
+    return {
+      title: "Analysis service unavailable",
+      message: "Our OCR or AI service is temporarily unavailable.",
+      hint: serverMessage || "Wait a moment and try the scan again.",
+      retryable: true,
+    };
+  }
+
+  return {
+    title: "Analysis could not be completed",
+    message: serverMessage || "Something unexpected interrupted the scan.",
+    hint: "Please try again. If the problem continues, use a different job input.",
+    retryable: true,
+  };
+};
+
 function Test() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -51,13 +99,18 @@ function Test() {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      setError("File size must be under 5MB.");
+      setError({
+        title: "Screenshot is too large",
+        message: "The selected file is larger than the 5MB upload limit.",
+        hint: "Choose a smaller JPG or PNG screenshot, then try again.",
+        retryable: false,
+      });
       return;
     }
     setImageFile(file);
@@ -73,15 +126,25 @@ function Test() {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    setError("");
+    setError(null);
 
     if (activeTab === "text" && !text.trim()) {
-      setError("Please enter or paste the job posting details.");
+      setError({
+        title: "Job details are missing",
+        message: "There is no job text to scan yet.",
+        hint: "Paste the job description, recruiter message, or job link into the text box.",
+        retryable: false,
+      });
       return;
     }
 
     if (activeTab === "image" && !imageFile) {
-      setError("Please select or drop a screenshot of the job posting.");
+      setError({
+        title: "Screenshot is missing",
+        message: "No job screenshot has been selected.",
+        hint: "Choose a clear JPG or PNG screenshot before starting the scan.",
+        retryable: false,
+      });
       return;
     }
 
@@ -108,9 +171,7 @@ function Test() {
       navigate("/result", { state: { report: res.data.data } });
     } catch (err) {
       clearInterval(stageInterval);
-      setError(
-        err.response?.data?.error?.message || "An error occurred during analysis. Please try again."
-      );
+      setError(getAnalysisError(err));
     } finally {
       setLoading(false);
     }
@@ -164,7 +225,7 @@ function Test() {
                 type="button"
                 onClick={() => {
                   setActiveTab("text");
-                  setError("");
+                  setError(null);
                 }}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
                   activeTab === "text"
@@ -179,7 +240,7 @@ function Test() {
                 type="button"
                 onClick={() => {
                   setActiveTab("image");
-                  setError("");
+                  setError(null);
                 }}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
                   activeTab === "image"
@@ -196,10 +257,46 @@ function Test() {
           {/* Form Content */}
           <form onSubmit={handleSubmit} className="p-6 sm:p-8">
             {error && (
-              <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
-                <span>{error}</span>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                role="alert"
+                aria-live="assertive"
+                className="mb-6 flex flex-col gap-4 rounded-2xl border border-red-400/40 bg-red-500/[0.12] p-4 shadow-[0_0_24px_-12px_rgba(248,113,113,0.8)] sm:flex-row sm:items-start"
+              >
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-300/40 bg-red-400/15">
+                    <AlertCircle className="h-5 w-5 text-red-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-red-100">{error.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-red-200/90">{error.message}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-red-200/70">
+                      <span className="font-semibold text-red-100">Next step:</span> {error.hint}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 sm:pt-0.5">
+                  {error.retryable && (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-300/30 bg-red-400/15 px-3 py-2 text-xs font-semibold text-red-100 transition-colors hover:bg-red-400/25"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Try again
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setError(null)}
+                    aria-label="Dismiss error"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-200/70 transition-colors hover:bg-red-400/15 hover:text-red-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
             )}
 
             {/* Text Mode */}
@@ -253,7 +350,7 @@ function Test() {
                         type="button"
                         onClick={() => {
                           setText(sample.text);
-                          setError("");
+                          setError(null);
                         }}
                         className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300 hover:border-[#1ecfc1]/40 hover:bg-[#1ecfc1]/10 hover:text-[#1ecfc1] transition-all"
                       >
