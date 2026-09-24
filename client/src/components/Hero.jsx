@@ -1,13 +1,35 @@
 import React from "react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
-import ShieldContainer from "./ShieldContainer";
-import { ShieldCheck, SearchCheck, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
+import masRusdi from "@/assets/masRusdi.png";
+import { SearchCheck, CheckCircle2, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 
 function Hero() {
   const { user } = useAuth();
+  const rotateX = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
+  const rotateY = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
+  const imageX = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
+  const imageY = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
+
+  const handlePointerMove = (event) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const pointerX = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const pointerY = (event.clientY - bounds.top) / bounds.height - 0.5;
+
+    rotateX.set(pointerY * -10);
+    rotateY.set(pointerX * 10);
+    imageX.set(pointerX * 10);
+    imageY.set(pointerY * 10);
+  };
+
+  const handlePointerLeave = () => {
+    rotateX.set(0);
+    rotateY.set(0);
+    imageX.set(0);
+    imageY.set(0);
+  };
 
   return (
     <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-28">
@@ -79,7 +101,7 @@ function Hero() {
             </div>
           </motion.div>
 
-          {/* Right Column: 3D Shield */}
+          {/* Right Column: Interactive 2D Shield */}
           <motion.div
             className="hidden lg:flex lg:col-span-5 relative items-center justify-center transform-gpu will-change-transform"
             initial={{ opacity: 0, y: 15 }}
@@ -90,9 +112,18 @@ function Hero() {
             <div className="pointer-events-none absolute h-[320px] w-[320px] rounded-full bg-[#1ecfc1]/20 blur-[100px]" />
             <div className="pointer-events-none absolute h-[240px] w-[240px] rounded-full bg-blue-500/15 blur-[80px]" />
 
-            {/* 3D Shield Canvas */}
-            <div className="relative w-full aspect-square max-w-[460px] flex items-center justify-center">
-              <ShieldContainer />
+            {/* Interactive 2D image */}
+            <div
+              className="relative w-full aspect-square max-w-[460px] flex items-center justify-center"
+              onPointerMove={handlePointerMove}
+              onPointerLeave={handlePointerLeave}
+            >
+              <motion.img
+                src={masRusdi}
+                alt="LokerBuster shield protection"
+                className="relative z-10 w-full max-w-[460px] object-contain drop-shadow-[0_24px_45px_rgba(0,0,0,0.45)]"
+                style={{ rotateX, rotateY, x: imageX, y: imageY, transformPerspective: 900 }}
+              />
             </div>
           </motion.div>
         </div>

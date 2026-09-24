@@ -1,8 +1,70 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Lock, Activity, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+
+const HEALTH_POLL_INTERVAL_MS = 30_000;
+
+const HEALTH_STATUS_CONFIG = {
+  healthy: {
+    label: "Operational",
+    container: "border-emerald-500/25 bg-emerald-500/10",
+    dot: "bg-emerald-400",
+    text: "text-emerald-400",
+  },
+  degraded: {
+    label: "Degraded",
+    container: "border-amber-500/30 bg-amber-500/10",
+    dot: "bg-amber-400",
+    text: "text-amber-400",
+  },
+  unhealthy: {
+    label: "Unavailable",
+    container: "border-red-500/30 bg-red-500/10",
+    dot: "bg-red-400",
+    text: "text-red-400",
+  },
+  unknown: {
+    label: "Checking...",
+    container: "border-white/15 bg-white/5",
+    dot: "bg-gray-400",
+    text: "text-gray-300",
+  },
+};
 
 function Footer() {
+  const [health, setHealth] = useState({ status: "unknown", services: {} });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchHealth = async () => {
+      try {
+        const response = await api.get("/health", { timeout: 10000 });
+        if (isMounted) setHealth(response.data);
+      } catch (error) {
+        if (!isMounted) return;
+        setHealth(error.response?.data?.status
+          ? error.response.data
+          : { status: "unhealthy", services: {} });
+      }
+    };
+
+    fetchHealth();
+    const intervalId = window.setInterval(fetchHealth, HEALTH_POLL_INTERVAL_MS);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const healthStatus = HEALTH_STATUS_CONFIG[health.status] || HEALTH_STATUS_CONFIG.unknown;
+  const serviceSummary = Object.entries(health.services || {})
+    .map(([name, service]) => `${name}: ${service.status}`)
+    .join(" | ");
+
   return (
     <footer className="border-t border-white/10 bg-[#060913] text-gray-400">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -18,13 +80,17 @@ function Footer() {
             <p className="max-w-md text-sm leading-relaxed text-gray-400">
               AI-powered job scam detection engine. Protecting job seekers and career builders from ghost companies, advance fee scams, and recruitment traps.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 w-fit">
+            <div
+              aria-live="polite"
+              title={serviceSummary || "Checking backend services"}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 w-fit ${healthStatus.container}`}
+            >
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${healthStatus.dot} opacity-75`} />
+                <span className={`relative inline-flex h-2 w-2 rounded-full ${healthStatus.dot}`} />
               </span>
               <span className="font-mono text-xs text-gray-300">
-                Threat Database: <strong className="text-emerald-400 font-semibold">Operational</strong>
+                Backend Status: <strong className={`${healthStatus.text} font-semibold`}>{healthStatus.label}</strong>
               </span>
             </div>
           </div>
