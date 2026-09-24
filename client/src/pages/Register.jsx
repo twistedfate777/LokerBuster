@@ -141,14 +141,16 @@ function Register() {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {/* Email Field */}
             <div>
-              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
+              <label htmlFor="register-email" className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
+                  id="register-email"
                   type="email"
                   placeholder="analyst@example.com"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -159,14 +161,16 @@ function Register() {
 
             {/* Username Field */}
             <div>
-              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
+              <label htmlFor="register-username" className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Username
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
+                  id="register-username"
                   type="text"
                   placeholder="cyber_defender"
+                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -177,14 +181,16 @@ function Register() {
 
             {/* Password Field */}
             <div>
-              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
+              <label htmlFor="register-password" className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
+                  id="register-password"
                   type={showPassword ? "text" : "password"}
                   placeholder="At least 8 characters"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -214,14 +220,16 @@ function Register() {
 
             {/* Confirm Password Field */}
             <div>
-              <label className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
+              <label htmlFor="register-confirm-password" className="font-mono text-xs text-gray-300 uppercase block mb-1.5">
                 Confirm Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
+                  id="register-confirm-password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Repeat your password"
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required

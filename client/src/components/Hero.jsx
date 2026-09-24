@@ -3,11 +3,9 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import masRusdi from "@/assets/masRusdi.png";
 import { SearchCheck, CheckCircle2, ArrowRight } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
 function Hero() {
-  const { user } = useAuth();
   const rotateX = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
   const rotateY = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
   const imageX = useSpring(useMotionValue(0), { stiffness: 180, damping: 20 });
@@ -61,32 +59,32 @@ function Hero() {
 
             {/* Subtitle */}
             <p className="mt-6 max-w-2xl text-pretty text-base sm:text-lg leading-relaxed text-gray-300 font-normal">
-              Don't let deceptive recruitment traps compromise your career. LokerBuster validates metadata, detects linguistic anomalies, and verifies corporate registries in real time.
+              Review job text or screenshots for suspicious language, unrealistic offers, and upfront-payment requests. Results are AI-generated risk estimates, not independent employer verification.
             </p>
 
             {/* Feature Trust Pills */}
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg text-left">
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
-                <span className="text-xs sm:text-sm text-gray-300">Ghost Company Vetting</span>
+                <span className="text-xs sm:text-sm text-gray-300">Language Pattern Review</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
-                <span className="text-xs sm:text-sm text-gray-300">Advance-Fee Trap Detection</span>
+                <span className="text-xs sm:text-sm text-gray-300">Upfront-Payment Signals</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
-                <span className="text-xs sm:text-sm text-gray-300">Instant Risk Scoring</span>
+                <span className="text-xs sm:text-sm text-gray-300">AI Risk Estimates</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
-                <span className="text-xs sm:text-sm text-gray-300">Zero Resume Logging</span>
+                <span className="text-xs sm:text-sm text-gray-300">Text + Screenshot Scans</span>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-              <Link to={user ? "/test" : "/login"} className="w-full sm:w-auto">
+              <Link to="/test" className="w-full sm:w-auto">
                 <Button className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-6 py-6 font-semibold text-base shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer">
                   <SearchCheck className="h-5 w-5" />
                   Launch Threat Scanner
@@ -109,8 +107,13 @@ function Hero() {
             transition={{ duration: 0.45, ease: "easeOut" }}
           >
             {/* Ambient Backlight Glow behind the shield */}
-            <div className="pointer-events-none absolute h-[320px] w-[320px] rounded-full bg-[#1ecfc1]/20 blur-[100px]" />
-            <div className="pointer-events-none absolute h-[240px] w-[240px] rounded-full bg-blue-500/15 blur-[80px]" />
+            <div className="pointer-events-none absolute h-[360px] w-[360px] rounded-full bg-[#1ecfc1]/15 blur-[125px]" />
+            <div className="pointer-events-none absolute h-[280px] w-[280px] rounded-full bg-blue-500/10 blur-[105px]" />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="absolute h-[540px] w-[540px] rounded-full bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.28)_0%,rgba(255,241,184,0.16)_24%,rgba(30,207,193,0.1)_48%,transparent_74%)] blur-[18px]" />
+              <div className="absolute h-[650px] w-[650px] rounded-full opacity-35 [background:repeating-conic-gradient(from_0deg,rgba(255,255,255,0.1)_0deg,rgba(255,255,255,0.1)_3deg,transparent_10deg,transparent_30deg)] [mask-image:radial-gradient(ellipse_at_center,black_0%,transparent_68%)] blur-[1px] animate-[spin_36s_linear_infinite]" />
+              <div className="absolute h-[430px] w-[430px] rounded-full border border-white/10 shadow-[0_0_70px_rgba(255,255,255,0.08),inset_0_0_70px_rgba(30,207,193,0.08)] blur-[0.5px]" />
+            </div>
 
             {/* Interactive 2D image */}
             <div

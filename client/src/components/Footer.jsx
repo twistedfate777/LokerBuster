@@ -80,18 +80,21 @@ function Footer() {
             <p className="max-w-md text-sm leading-relaxed text-gray-400">
               AI-powered job scam detection engine. Protecting job seekers and career builders from ghost companies, advance fee scams, and recruitment traps.
             </p>
-            <div
-              aria-live="polite"
-              title={serviceSummary || "Checking backend services"}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 w-fit ${healthStatus.container}`}
-            >
-              <span className="relative flex h-2 w-2">
-                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${healthStatus.dot} opacity-75`} />
-                <span className={`relative inline-flex h-2 w-2 rounded-full ${healthStatus.dot}`} />
-              </span>
-              <span className="font-mono text-xs text-gray-300">
-                Backend Status: <strong className={`${healthStatus.text} font-semibold`}>{healthStatus.label}</strong>
-              </span>
+            <div className="flex flex-col gap-2">
+              <div
+                aria-live="polite"
+                aria-label={`Backend status: ${healthStatus.label}${serviceSummary ? `. ${serviceSummary}` : ""}`}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 w-fit ${healthStatus.container}`}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${healthStatus.dot} opacity-75`} />
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${healthStatus.dot}`} />
+                </span>
+                <span className="font-mono text-xs text-gray-300">
+                  Backend Status: <strong className={`${healthStatus.text} font-semibold`}>{healthStatus.label}</strong>
+                </span>
+              </div>
+              {serviceSummary && <p className="max-w-md text-xs text-gray-500">Services: {serviceSummary}</p>}
             </div>
           </div>
 
@@ -127,14 +130,14 @@ function Footer() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1ecfc1]/10 text-[#1ecfc1] border border-[#1ecfc1]/20">
                   <Lock className="h-3.5 w-3.5" />
                 </div>
-                <span>Zero-Retention Ingestion</span>
+                <span>Scan Data Notice</span>
               </div>
               <p className="text-xs leading-relaxed text-gray-400">
-                Resumes & links are processed in volatile memory and never stored without explicit user submission.
+                Submitted text is stored with scan reports, which are available through the public community API. Avoid personal or confidential information.
               </p>
               <div className="pt-1 flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>Client-Safe AI Pipeline</span>
+                <span>AI-assisted, not employer-verified</span>
               </div>
             </div>
           </div>

@@ -46,7 +46,7 @@ function Navbar() {
               Overview
             </Link>
             <Link
-              to={user ? "/test" : "/login"}
+              to="/test"
               className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
                 isActive("/test")
                   ? "bg-[#1ecfc1]/15 text-[#1ecfc1] border border-[#1ecfc1]/30 shadow-[0_0_12px_-2px_rgba(30,207,193,0.25)]"

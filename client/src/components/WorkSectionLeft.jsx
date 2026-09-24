@@ -352,9 +352,9 @@ function WorkSectionLeft() {
             <Zap className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-xs font-mono text-gray-400 uppercase tracking-wider">Sub-second Latency</div>
-            <div className="text-sm font-semibold text-white mt-0.5">&lt; 250ms Threat Analysis</div>
-            <p className="text-xs text-gray-400 mt-1">Instant red flag decomposition across all job descriptions.</p>
+            <div className="text-xs font-mono text-gray-400 uppercase tracking-wider">AI Review</div>
+            <div className="text-sm font-semibold text-white mt-0.5">Text & Screenshot Analysis</div>
+            <p className="text-xs text-gray-400 mt-1">Submitted content is reviewed for common job-scam patterns.</p>
           </div>
         </div>
 
@@ -363,9 +363,9 @@ function WorkSectionLeft() {
             <SearchCheck className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-xs font-mono text-gray-400 uppercase tracking-wider">Entity Verification</div>
-            <div className="text-sm font-semibold text-white mt-0.5">Deep Background Check</div>
-            <p className="text-xs text-gray-400 mt-1">Cross-referencing recruiter domains and corporate registry records.</p>
+            <div className="text-xs font-mono text-gray-400 uppercase tracking-wider">Risk Indicators</div>
+            <div className="text-sm font-semibold text-white mt-0.5">Language & Payment Signals</div>
+            <p className="text-xs text-gray-400 mt-1">The model reviews submitted content; it does not verify employer records.</p>
           </div>
         </div>
 
@@ -374,9 +374,9 @@ function WorkSectionLeft() {
             <Lock className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-xs font-mono text-gray-400 uppercase tracking-wider">Zero Data Exposure</div>
-            <div className="text-sm font-semibold text-white mt-0.5">Client-Safe Ingestion</div>
-            <p className="text-xs text-gray-400 mt-1">No personal application records or resumes stored on disk.</p>
+            <div className="text-xs font-mono text-gray-400 uppercase tracking-wider">Submission Transparency</div>
+            <div className="text-sm font-semibold text-white mt-0.5">Reports Are Stored</div>
+            <p className="text-xs text-gray-400 mt-1">Submitted text is saved with reports and may be publicly accessible.</p>
           </div>
         </div>
       </motion.div>

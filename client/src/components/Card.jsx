@@ -1,4 +1,4 @@
-import { ShieldAlert, ShieldCheck, AlertTriangle, CheckCircle2, Calendar, Building2, ExternalLink } from "lucide-react";
+import { ShieldAlert, ShieldCheck, AlertTriangle, CheckCircle2, Calendar } from "lucide-react";
 
 function Card({ report }) {
   const {
@@ -12,14 +12,13 @@ function Card({ report }) {
     green_flags = [],
     source_type,
     created_at,
-    user_email,
   } = report;
 
   const scoreColor = is_scam ? "text-red-400" : "text-emerald-400";
   const badgeBg = is_scam
     ? "border border-red-500/30 bg-red-500/10 text-red-400"
     : "border border-emerald-500/30 bg-emerald-500/10 text-emerald-400";
-  const badgeText = is_scam ? "CRITICAL SCAM" : "VERIFIED SAFE";
+  const badgeText = is_scam ? "HIGH RISK" : "LOWER RISK";
   const Icon = is_scam ? ShieldAlert : ShieldCheck;
 
   // Generate initial monogram
@@ -66,7 +65,7 @@ function Card({ report }) {
         <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl border border-white/5 bg-white/[0.02] p-3 text-center">
           <div>
             <span className="font-mono text-[10px] text-gray-400 uppercase block">
-              Scam Score
+              Risk Score
             </span>
             <span className={`font-mono text-base font-bold ${scoreColor}`}>
               {scam_score}%
@@ -109,7 +108,7 @@ function Card({ report }) {
             {green_flags?.length > 0 && (
               <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] text-emerald-300">
                 <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                {green_flags.length} Verified
+                {green_flags.length} Positive Signals
               </span>
             )}
           </div>
@@ -129,11 +128,6 @@ function Card({ report }) {
             : "Recent"}
         </span>
 
-        {user_email && (
-          <span className="text-gray-400 truncate max-w-[120px]">
-            by {user_email.split("@")[0]}
-          </span>
-        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useLocation, Navigate, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -9,12 +9,8 @@ import {
   Copy,
   Check,
   ArrowLeft,
-  Share2,
   FileSearch,
   Building2,
-  Briefcase,
-  ExternalLink,
-  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,8 +18,21 @@ function Result() {
   const location = useLocation();
   const report = location.state?.report;
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
-  if (!report) return <Navigate to="/test" replace />;
+  if (!report) {
+    return (
+      <section className="mx-auto flex min-h-[50vh] max-w-3xl flex-col items-center justify-center px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold text-white">This report is no longer open</h1>
+        <p className="mt-3 max-w-lg text-sm leading-relaxed text-gray-400">
+          Reports are not currently saved to a personal history, so this view cannot be restored after a refresh.
+        </p>
+        <Link to="/test" className="mt-6">
+          <Button className="bg-[#1ecfc1] text-gray-950 hover:bg-[#1ecfc1]/90">Start a new scan</Button>
+        </Link>
+      </section>
+    );
+  }
 
   const {
     scam_score,
@@ -36,11 +45,16 @@ function Result() {
     green_flags = [],
   } = report;
 
-  const handleCopyReport = () => {
-    const textToCopy = `[LokerBuster Threat Report]\nTarget: ${position || "Job Offer"} at ${company_name || "Unknown Company"}\nScam Score: ${scam_score}/100 (${is_scam ? "CRITICAL RISK" : "VERIFIED SAFE"})\nConfidence: ${confidence_level}%\nReasoning: ${reason}\n\nVerify yours at: https://lokerbuster.com`;
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyReport = async () => {
+    const textToCopy = `[LokerBuster Risk Report]\nTarget: ${position || "Job Offer"} at ${company_name || "Unknown Company"}\nRisk Score: ${scam_score}/100 (${is_scam ? "HIGHER RISK" : "LOWER RISK - REVIEW MANUALLY"})\nModel Confidence: ${confidence_level}%\nReasoning: ${reason}\n\nThis is an AI-generated estimate, not employer verification.`;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setCopyError("");
+    } catch {
+      setCopied(false);
+      setCopyError("Clipboard access failed. Please select and copy the report manually.");
+    }
   };
 
   const hasRedFlags = red_flags && red_flags.length > 0;
@@ -88,6 +102,8 @@ function Result() {
             </Button>
           </div>
         </div>
+        {copyError && <p role="alert" className="mb-4 text-right text-xs text-amber-300">{copyError}</p>}
+        {copied && <p role="status" className="sr-only">Report copied to clipboard.</p>}
 
         {/* Threat Summary Header Card */}
         <motion.div
@@ -114,11 +130,9 @@ function Result() {
                   ) : (
                     <ShieldCheck className="h-3.5 w-3.5" />
                   )}
-                  {is_scam ? "HIGH RISK: SCAM DETECTED" : "VERIFIED: LOW RISK / SAFE"}
+                  {is_scam ? "HIGH RISK INDICATORS" : "LOWER RISK - STILL VERIFY"}
                 </span>
-                <span className="font-mono text-xs text-gray-400">
-                  Dossier ID: #{Math.floor(Math.random() * 89999 + 10000)}
-                </span>
+                {report.id && <span className="font-mono text-xs text-gray-400">Report: {String(report.id).slice(0, 8)}</span>}
               </div>
 
               <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">
@@ -136,7 +150,7 @@ function Result() {
             <div className="flex flex-col items-end shrink-0">
               <div className="text-right">
                 <span className="font-mono text-xs text-gray-400 block uppercase">
-                  Scam Probability
+                  Risk Score
                 </span>
                 <span
                   className={`font-mono text-4xl sm:text-5xl font-black ${
@@ -150,59 +164,24 @@ function Result() {
             </div>
           </div>
         </motion.div>
+        <p className="mt-3 text-xs leading-relaxed text-gray-400">
+          This AI-generated estimate is based on submitted text or OCR and does not independently verify an employer or offer.
+        </p>
 
         {/* Dual Gauge Score Matrix */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
+          className="mt-6"
         >
-          {/* Scam Score Metric Card */}
-          <div className="rounded-2xl border border-white/10 bg-[#090f1e]/80 p-5 backdrop-blur-md">
+          <div className="max-w-xl rounded-2xl border border-white/10 bg-[#090f1e]/80 p-5 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs text-gray-400 uppercase tracking-wider">
-                Threat Risk Level
-              </span>
-              <span
-                className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${
-                  scam_score > 60
-                    ? "bg-red-500/20 text-red-400"
-                    : scam_score > 30
-                    ? "bg-amber-500/20 text-amber-400"
-                    : "bg-emerald-500/20 text-emerald-400"
-                }`}
-              >
-                {scam_score > 60 ? "SEVERE RISK" : scam_score > 30 ? "MODERATE" : "MINIMAL RISK"}
-              </span>
-            </div>
-
-            <div className="mt-4">
-              <div className="flex items-baseline justify-between">
-                <span className="font-mono text-3xl font-bold text-white">{scam_score}%</span>
-                <span className="text-xs text-gray-400">Scam Pattern Match</span>
-              </div>
-              <div className="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-1000 ${
-                    scam_score > 60
-                      ? "bg-gradient-to-r from-amber-500 to-red-500"
-                      : "bg-gradient-to-r from-teal-400 to-emerald-400"
-                  }`}
-                  style={{ width: `${Math.max(scam_score, 5)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Confidence Metric Card */}
-          <div className="rounded-2xl border border-white/10 bg-[#090f1e]/80 p-5 backdrop-blur-md">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs text-gray-400 uppercase tracking-wider">
-                AI Confidence Level
+                Model Confidence Estimate
               </span>
               <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[#1ecfc1]/20 text-[#1ecfc1]">
-                Neural Model v2.4
+                AI-generated
               </span>
             </div>
 
@@ -211,7 +190,7 @@ function Result() {
                 <span className="font-mono text-3xl font-bold text-[#1ecfc1]">
                   {confidence_level}%
                 </span>
-                <span className="text-xs text-gray-400">Analysis Reliability</span>
+                <span className="text-xs text-gray-400">Not a guarantee of accuracy</span>
               </div>
               <div className="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
                 <div
