@@ -69,6 +69,7 @@ function Hero() {
             {/* Subtitle */}
             <p className="mt-6 max-w-2xl text-pretty text-base sm:text-lg leading-relaxed text-gray-300 font-normal">
               Review job text or screenshots for suspicious language, unrealistic offers, and upfront-payment requests. Results are AI-generated risk estimates, not independent employer verification.
+              Review job text or screenshots for suspicious language, unrealistic offers, and upfront-payment requests. Results are AI-generated risk estimates, not independent employer verification.
             </p>
 
             {/* Feature Trust Pills */}
@@ -76,23 +77,28 @@ function Hero() {
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
                 <span className="text-xs sm:text-sm text-gray-300">Language Pattern Review</span>
+                <span className="text-xs sm:text-sm text-gray-300">Language Pattern Review</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
+                <span className="text-xs sm:text-sm text-gray-300">Upfront-Payment Signals</span>
                 <span className="text-xs sm:text-sm text-gray-300">Upfront-Payment Signals</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
                 <span className="text-xs sm:text-sm text-gray-300">AI Risk Estimates</span>
+                <span className="text-xs sm:text-sm text-gray-300">AI Risk Estimates</span>
               </div>
               <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 backdrop-blur-sm">
                 <CheckCircle2 className="h-4 w-4 text-[#1ecfc1] shrink-0" />
+                <span className="text-xs sm:text-sm text-gray-300">Text + Screenshot Scans</span>
                 <span className="text-xs sm:text-sm text-gray-300">Text + Screenshot Scans</span>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+              <Link to="/test" className="w-full sm:w-auto">
               <Link to="/test" className="w-full sm:w-auto">
                 <Button className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-6 py-6 font-semibold text-base shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer">
                   <SearchCheck className="h-5 w-5" />
