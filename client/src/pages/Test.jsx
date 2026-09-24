@@ -124,6 +124,38 @@ function Test() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handlePaste = (event) => {
+    const imageItem = Array.from(event.clipboardData.items).find((item) =>
+      item.type.startsWith("image/")
+    );
+    if (!imageItem) return;
+
+    const pastedBlob = imageItem.getAsFile();
+    if (!pastedBlob) return;
+
+    event.preventDefault();
+
+    if (pastedBlob.size > 5 * 1024 * 1024) {
+      setError({
+        title: "Pasted image is too large",
+        message: "The pasted image is larger than the 5MB upload limit.",
+        hint: "Copy a smaller image, then paste it again.",
+        retryable: false,
+      });
+      return;
+    }
+
+    const fileExtension = pastedBlob.type.split("/")[1] || "png";
+    const pastedFile = new File([pastedBlob], `pasted-image.${fileExtension}`, {
+      type: pastedBlob.type,
+    });
+
+    setActiveTab("image");
+    setImageFile(pastedFile);
+    setImagePreview(URL.createObjectURL(pastedFile));
+    setError(null);
+  };
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setError(null);
@@ -178,7 +210,7 @@ function Test() {
   };
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-20">
+    <section className="relative overflow-hidden py-12 sm:py-20" onPaste={handlePaste}>
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -z-10 h-[500px] w-full max-w-5xl overflow-hidden opacity-25">
         <div className="absolute top-0 left-1/4 h-[350px] w-[500px] rounded-full bg-[#1ecfc1]/20 blur-[130px]" />
@@ -399,6 +431,9 @@ function Test() {
                     </p>
                     <p className="mt-1 text-xs text-gray-400">
                       Supports PNG, JPG up to 5MB
+                    </p>
+                    <p className="mt-2 text-xs text-[#1ecfc1]/80">
+                      Or paste an image from your clipboard
                     </p>
                   </label>
                 ) : (
