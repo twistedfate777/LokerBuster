@@ -16,9 +16,9 @@
   - Updated `server/user/authentication.py` to use dynamic cookie names and fallback gracefully to standard `Authorization: Bearer` headers.
   - Updated `server/server/.env.example` with the new cookie and origin configuration keys.
 - Containerization and Cloud Deploy:
-  - Configured `server/Dockerfile` using `python:3.12-slim` with build dependencies (`gcc`, `libpq-dev`, `curl`, `zlib1g-dev`, `libjpeg-dev`, `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-ind`) and development server CMD.
+  - Configured `server/Dockerfile` with `python:3.14-slim` including all necessary native C-build dependencies (`build-essential`, `python3-dev`, `gcc`, `libpq-dev`, `curl`, `zlib1g-dev`, `libjpeg-dev`, `libpng-dev`, `libfreetype6-dev`, `tesseract-ocr`, `tesseract-ocr-eng`, `tesseract-ocr-ind`), upfront `setuptools`/`wheel` upgrades, and extended pip timeout/retries to compile wheels for packages lacking pre-built wheels on 3.14.
   - Added `server/.dockerignore` to keep builds lean.
-  - Added `server/app.yaml` configured for App Engine / Cloud deployments with Python 3.12, static handlers, and gunicorn entrypoint.
+  - Updated `server/app.yaml` with Python 3.14 runtime configuration.
 - Migrated OCR from OCR Space API to Pytesseract:
   - Added `Pillow==11.1.0` and `pytesseract==0.3.13` to `server/requirements.txt` with UTF-8 encoding.
   - Replaced `OCR_API_KEY` with `TESSERACT_CMD` and `TESSERACT_LANG` in `server/server/settings.py` and `server/server/.env.example`.
@@ -33,17 +33,13 @@
   - Removed obsolete `OCR_API_KEY` and eliminated all commented-out lines to maintain strict zero-comment compliance.
   - Cleaned `client/.env` to eliminate the `NODE_ENV` Vite warning.
 - Implemented Multi-Component Health Check API:
-  - Created `server/scanner/services/health_service.py` containing modular checks:
-    - `check_database_health()`: tests DB backend connection latency without raw SQL (`connection.ensure_connection()`).
-    - `check_ocr_health()`: verifies Tesseract binary existence, version, language packs, and latency.
-    - `check_llm_health()`: pings Groq API models endpoint verifying API key validity, connectivity, and latency.
+  - Created `server/scanner/services/health_service.py` containing modular checks for database, OCR, and Groq LLM.
   - Added `HealthCheckView` class-based APIView in `server/scanner/views.py`.
-  - Exposed health routes at `/api/health/` and `/health/`.
-  - Added `HealthCheckViewTest` in `server/scanner/tests.py` covering healthy, degraded OCR, and degraded DB scenarios.
+  - Exposed health routes at `/api/health/`.
+  - Added `HealthCheckViewTest` in `server/scanner/tests.py`.
 
 ## Logic for Recent Design/Code Decisions
-- Multi-Service Health Aggregation: The health endpoint returns granular statuses, latencies, and metadata for `database`, `ocr`, and `extractor` (LLM). If all services are operational, it returns HTTP 200 with `status: "healthy"`. If any service is unavailable (e.g. Tesseract binary not installed on host machine), it returns HTTP 503 with `status: "degraded"` and specific error messages, enabling easy diagnosis by developers and automated uptime monitors.
-- Python 3.12 Base Image: Maintained `python:3.12-slim` with `zlib1g-dev` and `libjpeg-dev` to guarantee instant binary wheel installations.
+- Python 3.14 Compatibility: To support `python:3.14-slim` where pre-built binary wheels are not yet published on PyPI, `server/Dockerfile` installs full C-compilation header libraries (`build-essential`, `python3-dev`, `zlib1g-dev`, `libjpeg-dev`, `libpng-dev`, `libfreetype6-dev`, `libpq-dev`) and upgrades `setuptools` and `wheel` prior to installing `requirements.txt`.
 - Zero Comments: Maintained strict compliance across all modified and created files with no `#` or inline comments.
 
 ## Known Blockers and Next Steps
