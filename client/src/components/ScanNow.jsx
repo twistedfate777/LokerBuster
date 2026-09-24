@@ -1,12 +1,9 @@
-import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
-import { ArrowRight, ShieldCheck, CheckCircle2, Lock, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 function ScanNow() {
-  const { user } = useAuth();
-
   return (
     <section className="relative overflow-hidden py-16 sm:py-24 border-t border-white/5">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -23,7 +20,7 @@ function ScanNow() {
           {/* Badge */}
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#1ecfc1]/30 bg-[#1ecfc1]/10 px-3.5 py-1 text-xs font-medium text-[#1ecfc1] mb-6">
             <Zap className="h-3.5 w-3.5" />
-            Instant Job Verification
+            AI-Assisted Risk Review
           </div>
 
           <h2 className="text-balance text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white max-w-2xl mx-auto">
@@ -31,18 +28,18 @@ function ScanNow() {
           </h2>
 
           <p className="mt-4 text-pretty text-sm sm:text-base text-gray-300 max-w-xl mx-auto">
-            Paste any job posting or upload a screenshot to receive a comprehensive threat report and risk breakdown in under 3 seconds.
+            Submit job text or a screenshot to receive an AI-generated risk estimate and explanation. It is a signal for further checks, not employer verification.
           </p>
 
           {/* Feature guarantees */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#1ecfc1]" />
-              <span>100% Free & Private</span>
+              <span>Free to use</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#1ecfc1]" />
-              <span>Real-Time Model v2.4</span>
+              <span>AI-assisted risk signals</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-[#1ecfc1]" />
@@ -52,28 +49,12 @@ function ScanNow() {
 
           {/* CTA Button */}
           <div className="mt-8 flex justify-center">
-            {user ? (
-              <Link to="/test">
-                <Button className="flex items-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-8 py-6 text-base font-semibold shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer">
-                  Launch Threat Scanner
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-3 items-center">
-                <Link to="/login">
-                  <Button className="flex items-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-8 py-6 text-base font-semibold shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer">
-                    Sign In to Scan
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="outline" className="rounded-xl border-white/10 bg-white/5 text-gray-300 px-6 py-6 text-base hover:bg-white/10 hover:text-white cursor-pointer">
-                    Create Account
-                  </Button>
-                </Link>
-              </div>
-            )}
+            <Link to="/test">
+              <Button className="flex items-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-8 py-6 text-base font-semibold shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer">
+                Launch Threat Scanner
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </div>

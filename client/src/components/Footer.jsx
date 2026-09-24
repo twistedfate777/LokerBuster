@@ -1,8 +1,70 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Lock, Activity, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+
+const HEALTH_POLL_INTERVAL_MS = 30_000;
+
+const HEALTH_STATUS_CONFIG = {
+  healthy: {
+    label: "Operational",
+    container: "border-emerald-500/25 bg-emerald-500/10",
+    dot: "bg-emerald-400",
+    text: "text-emerald-400",
+  },
+  degraded: {
+    label: "Degraded",
+    container: "border-amber-500/30 bg-amber-500/10",
+    dot: "bg-amber-400",
+    text: "text-amber-400",
+  },
+  unhealthy: {
+    label: "Unavailable",
+    container: "border-red-500/30 bg-red-500/10",
+    dot: "bg-red-400",
+    text: "text-red-400",
+  },
+  unknown: {
+    label: "Checking...",
+    container: "border-white/15 bg-white/5",
+    dot: "bg-gray-400",
+    text: "text-gray-300",
+  },
+};
 
 function Footer() {
+  const [health, setHealth] = useState({ status: "unknown", services: {} });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchHealth = async () => {
+      try {
+        const response = await api.get("health/", { timeout: 10000 });
+        if (isMounted) setHealth(response.data);
+      } catch (error) {
+        if (!isMounted) return;
+        setHealth(error.response?.data?.status
+          ? error.response.data
+          : { status: "unhealthy", services: {} });
+      }
+    };
+
+    fetchHealth();
+    const intervalId = window.setInterval(fetchHealth, HEALTH_POLL_INTERVAL_MS);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const healthStatus = HEALTH_STATUS_CONFIG[health.status] || HEALTH_STATUS_CONFIG.unknown;
+  const serviceSummary = Object.entries(health.services || {})
+    .map(([name, service]) => `${name}: ${service.status}`)
+    .join(" | ");
+
   return (
     <footer className="border-t border-white/10 bg-[#060913] text-gray-400">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -18,14 +80,21 @@ function Footer() {
             <p className="max-w-md text-sm leading-relaxed text-gray-400">
               AI-powered job scam detection engine. Protecting job seekers and career builders from ghost companies, advance fee scams, and recruitment traps.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 w-fit">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <span className="font-mono text-xs text-gray-300">
-                Threat Database: <strong className="text-emerald-400 font-semibold">Operational</strong>
-              </span>
+            <div className="flex flex-col gap-2">
+              <div
+                aria-live="polite"
+                aria-label={`Backend status: ${healthStatus.label}${serviceSummary ? `. ${serviceSummary}` : ""}`}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 w-fit ${healthStatus.container}`}
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${healthStatus.dot} opacity-75`} />
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${healthStatus.dot}`} />
+                </span>
+                <span className="font-mono text-xs text-gray-300">
+                  Backend Status: <strong className={`${healthStatus.text} font-semibold`}>{healthStatus.label}</strong>
+                </span>
+              </div>
+              {serviceSummary && <p className="max-w-md text-xs text-gray-500">Services: {serviceSummary}</p>}
             </div>
           </div>
 
@@ -61,14 +130,14 @@ function Footer() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1ecfc1]/10 text-[#1ecfc1] border border-[#1ecfc1]/20">
                   <Lock className="h-3.5 w-3.5" />
                 </div>
-                <span>Zero-Retention Ingestion</span>
+                <span>Scan Data Notice</span>
               </div>
               <p className="text-xs leading-relaxed text-gray-400">
-                Resumes & links are processed in volatile memory and never stored without explicit user submission.
+                Submitted text is stored with scan reports, which are available through the public community API. Avoid personal or confidential information.
               </p>
               <div className="pt-1 flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>Client-Safe AI Pipeline</span>
+                <span>AI-assisted, not employer-verified</span>
               </div>
             </div>
           </div>

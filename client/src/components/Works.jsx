@@ -52,7 +52,7 @@ function Works() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-4 max-w-2xl text-pretty text-base text-gray-400 sm:text-lg"
           >
-            A multi-stage neural pipeline designed to evaluate job metadata, detect linguistic deception, and verify hiring authenticity in seconds.
+            Submit job text or a screenshot for an AI-assisted review of language and common scam indicators. Results are estimates, not independent employer verification.
           </motion.p>
         </div>
 

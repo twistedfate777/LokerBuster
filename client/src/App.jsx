@@ -1,4 +1,5 @@
 import React from "react";
+import { MotionConfig } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
@@ -13,21 +14,23 @@ import Community from "./pages/Community";
 
 function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#070a13] text-foreground font-sans selection:bg-[#1ecfc1]/20 selection:text-[#1ecfc1]">
-      <ScrollToTop />
-      <Navbar />
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/test" element={<Test />} />
-          <Route path="/result" element={<Result />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="flex min-h-screen flex-col bg-[#070a13] text-foreground font-sans selection:bg-[#1ecfc1]/20 selection:text-[#1ecfc1]">
+        <ScrollToTop />
+        <Navbar />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/test" element={<Test />} />
+            <Route path="/result" element={<Result />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </MotionConfig>
   );
 }
 

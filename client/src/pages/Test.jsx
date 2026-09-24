@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Upload,
@@ -9,14 +9,11 @@ import {
   Image as ImageIcon,
   Sparkles,
   AlertCircle,
-  ShieldCheck,
-  Terminal,
   RotateCcw,
-  CheckCircle2,
   Cpu,
   Lock,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 
@@ -35,12 +32,10 @@ const SAMPLE_PRESETS = [
   },
 ];
 
-const SCAN_STAGES = [
-  "Extracting job parameters & recruiter claims...",
-  "Running NLP deception & fee extortion analysis...",
-  "Cross-referencing corporate domain history...",
-  "Generating final threat intelligence dossier...",
-];
+const MIN_TEXT_LENGTH = 20;
+const MAX_TEXT_LENGTH = 10000;
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg"]);
 
 const getAnalysisError = (error) => {
   const status = error.response?.status;
@@ -93,18 +88,37 @@ const getAnalysisError = (error) => {
 function Test() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const requestControllerRef = useRef(null);
   const [activeTab, setActiveTab] = useState("text"); // "text" | "image"
   const [text, setText] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [stageIndex, setStageIndex] = useState(0);
+  const [hasAcknowledgedPrivacy, setHasAcknowledgedPrivacy] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
+
+  const setUploadedImage = (file) => {
+    if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
+      setError({
+        title: "Unsupported image type",
+        message: "Only PNG and JPEG images can be scanned.",
+        hint: "Choose or paste a PNG or JPEG image.",
+        retryable: false,
+      });
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
       setError({
         title: "Screenshot is too large",
         message: "The selected file is larger than the 5MB upload limit.",
@@ -113,9 +127,15 @@ function Test() {
       });
       return;
     }
+
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    setError("");
+    setError(null);
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) setUploadedImage(file);
   };
 
   const removeImage = () => {
@@ -124,15 +144,78 @@ function Test() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handlePaste = (event) => {
+    const imageItems = Array.from(event.clipboardData.items).filter((item) =>
+      item.type.startsWith("image/")
+    );
+    if (!imageItems.length) return;
+
+    event.preventDefault();
+    const imageItem = imageItems.find((item) => ACCEPTED_IMAGE_TYPES.has(item.type));
+    if (!imageItem) {
+      setError({
+        title: "Unsupported image type",
+        message: "Only PNG and JPEG images can be scanned.",
+        hint: "Copy a PNG or JPEG image, then paste it again.",
+        retryable: false,
+      });
+      return;
+    }
+
+    const pastedBlob = imageItem.getAsFile();
+    if (!pastedBlob) return;
+
+    const fileExtension = pastedBlob.type.split("/")[1] || "png";
+    const pastedFile = new File([pastedBlob], `pasted-image.${fileExtension}`, {
+      type: pastedBlob.type,
+    });
+
+    setActiveTab("image");
+    setUploadedImage(pastedFile);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (!file) return;
+
+    setActiveTab("image");
+    setUploadedImage(file);
+  };
+
+  const handleCancelScan = () => {
+    requestControllerRef.current?.abort();
+  };
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setError(null);
 
-    if (activeTab === "text" && !text.trim()) {
+    if (!hasAcknowledgedPrivacy) {
+      setError({
+        title: "Please review the privacy notice",
+        message: "Scans are stored and report data may be publicly accessible.",
+        hint: "Review and acknowledge the privacy notice before scanning.",
+        retryable: false,
+      });
+      return;
+    }
+
+    if (activeTab === "text" && text.trim().length < MIN_TEXT_LENGTH) {
       setError({
         title: "Job details are missing",
-        message: "There is no job text to scan yet.",
-        hint: "Paste the job description, recruiter message, or job link into the text box.",
+        message: `Enter at least ${MIN_TEXT_LENGTH} characters of job text.`,
+        hint: "Paste the job description or recruiter message, not just a link.",
+        retryable: false,
+      });
+      return;
+    }
+
+    if (activeTab === "text" && text.length > MAX_TEXT_LENGTH) {
+      setError({
+        title: "Job details are too long",
+        message: `The maximum length is ${MAX_TEXT_LENGTH.toLocaleString()} characters.`,
+        hint: "Remove extra text, then submit the scan again.",
         retryable: false,
       });
       return;
@@ -149,12 +232,8 @@ function Test() {
     }
 
     setLoading(true);
-    setStageIndex(0);
-
-    // Simulate scanning progress stages
-    const stageInterval = setInterval(() => {
-      setStageIndex((prev) => (prev < SCAN_STAGES.length - 1 ? prev + 1 : prev));
-    }, 700);
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
 
     try {
       let res;
@@ -163,22 +242,23 @@ function Test() {
         fd.append("image", imageFile);
         res = await api.post("/analyze/", fd, {
           headers: { "Content-Type": "multipart/form-data" },
+          signal: controller.signal,
         });
       } else {
-        res = await api.post("/analyze/", { text });
+        res = await api.post("/analyze/", { text }, { signal: controller.signal });
       }
-      clearInterval(stageInterval);
       navigate("/result", { state: { report: res.data.data } });
     } catch (err) {
-      clearInterval(stageInterval);
+      if (err.code === "ERR_CANCELED") return;
       setError(getAnalysisError(err));
     } finally {
+      requestControllerRef.current = null;
       setLoading(false);
     }
   };
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-20">
+    <section className="relative overflow-hidden py-12 sm:py-20" onPaste={handlePaste}>
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -z-10 h-[500px] w-full max-w-5xl overflow-hidden opacity-25">
         <div className="absolute top-0 left-1/4 h-[350px] w-[500px] rounded-full bg-[#1ecfc1]/20 blur-[130px]" />
@@ -204,7 +284,7 @@ function Test() {
             transition={{ delay: 0.2 }}
             className="mt-3 text-sm sm:text-base text-gray-400 max-w-xl mx-auto"
           >
-            Paste job text, recruitment chats, or upload job screenshots. Our AI analyzes metadata, salary realism, and payment demands.
+            Paste job text or upload a screenshot. Our AI reviews the submitted content for common scam indicators; it does not verify employer records.
           </motion.p>
         </div>
 
@@ -217,16 +297,24 @@ function Test() {
         >
           {/* Terminal Title Bar */}
           <div className="flex flex-wrap items-center justify-between border-b border-white/10 bg-white/[0.02] px-6 py-3.5">
-            
+            <div className="flex items-center gap-2 rounded-lg border border-[#1ecfc1]/15 bg-[#1ecfc1]/[0.04] px-2.5 py-1.5 shadow-[0_0_18px_-10px_rgba(30,207,193,0.8)]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md border border-[#1ecfc1]/25 bg-[#1ecfc1]/10 text-[#1ecfc1]">
+                <Cpu className="h-3 w-3" />
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-gray-500">
+                AI via <strong className="font-semibold text-[#1ecfc1]">GROQ</strong>
+              </span>
+            </div>
 
             {/* Input Mode Tabs */}
-            <div className="flex items-center rounded-xl border border-white/10 bg-black/40 p-1">
+            <div role="group" aria-label="Select job input type" className="flex items-center rounded-xl border border-white/10 bg-black/40 p-1">
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab("text");
                   setError(null);
                 }}
+                aria-pressed={activeTab === "text"}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
                   activeTab === "text"
                     ? "bg-[#1ecfc1] text-gray-950 shadow-sm"
@@ -242,6 +330,7 @@ function Test() {
                   setActiveTab("image");
                   setError(null);
                 }}
+                aria-pressed={activeTab === "image"}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all ${
                   activeTab === "image"
                     ? "bg-[#1ecfc1] text-gray-950 shadow-sm"
@@ -307,7 +396,7 @@ function Test() {
                     Job Description / Offer Text
                   </label>
                   <span className="font-mono text-xs text-gray-400">
-                    {text.length} characters
+                    {text.length.toLocaleString()} / {MAX_TEXT_LENGTH.toLocaleString()} characters
                   </span>
                 </div>
 
@@ -315,7 +404,8 @@ function Test() {
                   <textarea
                     id="job-text"
                     rows={6}
-                    placeholder="Paste email, WhatsApp/Telegram message, job link, or requirements here..."
+                    maxLength={MAX_TEXT_LENGTH}
+                    placeholder="Paste a job description, recruiter email, or WhatsApp/Telegram message here..."
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     disabled={loading}
@@ -383,15 +473,20 @@ function Test() {
                   <label
                     htmlFor="image-file-input"
                     className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/15 bg-[#060a14] py-12 px-6 text-center cursor-pointer hover:border-[#1ecfc1]/50 hover:bg-[#1ecfc1]/5 transition-all group"
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={handleDrop}
                   >
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-gray-400 group-hover:border-[#1ecfc1]/40 group-hover:text-[#1ecfc1] group-hover:scale-105 transition-all mb-3">
                       <Upload className="h-6 w-6" />
                     </div>
                     <p className="text-sm font-semibold text-gray-200">
-                      Click to upload or drag and drop screenshot
+                      Click to upload or drop a screenshot
                     </p>
                     <p className="mt-1 text-xs text-gray-400">
                       Supports PNG, JPG up to 5MB
+                    </p>
+                    <p className="mt-2 text-xs text-[#1ecfc1]/80">
+                      Or paste an image from your clipboard
                     </p>
                   </label>
                 ) : (
@@ -421,7 +516,7 @@ function Test() {
 
             {/* Scanning Progress Overlay */}
             {loading && (
-              <div className="my-6 rounded-2xl border border-[#1ecfc1]/30 bg-[#1ecfc1]/5 p-5 text-center">
+              <div role="status" aria-live="polite" className="my-6 rounded-2xl border border-[#1ecfc1]/30 bg-[#1ecfc1]/5 p-5 text-center">
                 <div className="flex items-center justify-center gap-3">
                   <span className="relative flex h-3 w-3">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1ecfc1] opacity-75" />
@@ -432,14 +527,13 @@ function Test() {
                   </span>
                 </div>
                 <p className="mt-2 text-xs sm:text-sm text-gray-300 font-mono">
-                  {SCAN_STAGES[stageIndex]}
+                  Reviewing submitted content. This can take up to a minute.
                 </p>
                 <div className="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-[#1ecfc1]"
-                    initial={{ width: "10%" }}
-                    animate={{ width: `${((stageIndex + 1) / SCAN_STAGES.length) * 100}%` }}
-                    transition={{ duration: 0.5 }}
+                    className="h-full w-1/3 bg-[#1ecfc1]"
+                    animate={{ x: ["-100%", "300%"] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
                   />
                 </div>
               </div>
@@ -447,29 +541,49 @@ function Test() {
 
             {/* Submit Action Button */}
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10 pt-6">
-              <span className="text-xs text-gray-400 flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5 text-[#1ecfc1]" />
-                Zero data retention • In-memory validation
-              </span>
+              <div className="max-w-xl rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-3">
+                <p className="text-xs leading-relaxed text-gray-300">
+                  <Lock className="mr-1.5 inline h-3.5 w-3.5 text-amber-300" />
+                  Submitted text is stored with scan reports, which are available through the public community API. Screenshot uploads may also be sent to configured image storage. Do not submit personal or confidential information.
+                </p>
+                <label htmlFor="privacy-acknowledgement" className="mt-2 flex cursor-pointer items-start gap-2 text-xs text-gray-200">
+                  <input
+                    id="privacy-acknowledgement"
+                    type="checkbox"
+                    checked={hasAcknowledgedPrivacy}
+                    onChange={(event) => setHasAcknowledgedPrivacy(event.target.checked)}
+                    disabled={loading}
+                    className="mt-0.5 accent-[#1ecfc1]"
+                  />
+                  <span>I understand my submitted content is stored and may be publicly accessible.</span>
+                </label>
+              </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-8 py-6 font-semibold text-base shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Cpu className="h-5 w-5 animate-spin" />
-                    Processing Threat Scan...
-                  </>
-                ) : (
-                  <>
-                    <SearchCheck className="h-5 w-5" />
-                    Scan This Job Now
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-[#1ecfc1] text-gray-950 px-8 py-6 font-semibold text-base shadow-[0_0_25px_-5px_rgba(30,207,193,0.5)] hover:bg-[#1ecfc1]/90 hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Cpu className="h-5 w-5 animate-spin" />
+                      Processing Threat Scan...
+                    </>
+                  ) : (
+                    <>
+                      <SearchCheck className="h-5 w-5" />
+                      Scan This Job Now
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+                {loading && (
+                  <Button type="button" variant="outline" onClick={handleCancelScan} className="w-full sm:w-auto border-white/15 text-gray-300">
+                    Cancel scan
+                  </Button>
                 )}
-              </Button>
+              </div>
             </div>
           </form>
         </motion.div>

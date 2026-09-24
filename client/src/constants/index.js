@@ -58,21 +58,21 @@ export const works = [
     id: 2, 
     title: "INPUT JOB DATA", 
 
-    description: "Paste the job application link and the job description. Providing the company name allows our AI to perform a deeper historical background check.",
+    description: "Paste the job description or recruiter message, or upload a screenshot. A link by itself is not analyzed.",
     hover : 1
   },
   {
     id: 3, 
     title: "AI DEEP SCAN", 
 
-    description: "Click 'Check Job'. Our AI instantly analyzes the metadata, company reputation, and recruitment patterns for common scam indicators.",
+    description: "Our AI reviews submitted text or OCR content for language patterns and common scam indicators. It does not independently check company records.",
     hover : 2
   },
   {
     id: 4, 
     title: "SAFETY VERDICT", 
 
-    description: "Receive a real-time Scam Score. We break down the red flags so you can decide whether to apply with confidence or stay away.",
+    description: "Review a risk estimate and its supporting indicators. A lower score is not proof that a job or employer is legitimate.",
     hover : 3
   },
 ]
@@ -81,27 +81,27 @@ export const faqData = [
   {
     id: 1,
     question: "Is this actually 100% accurate?",
-    answer: "Nothing is 100% except the fact that scammers are getting smarter. We use AI to scan for red flags, NLP to detect linguistic traps, and a 'Scam Score' to give you the odds. If we say it's a 90% scam, you should probably stop replying."
+    answer: "No. The score is an AI-generated estimate based on the text or screenshot you submit. It can miss scams or flag legitimate offers, so verify employers through official channels."
   },
   {
     id: 3,
     question: "What if the job looks totally professional?",
-    answer: "Professionalism is cheap. A stolen logo and a polished template cost $0. Our engine looks past the pretty fonts and checks the metadata, the domain age, and the 'too-good-to-be-true' patterns that bots use."
+    answer: "A polished design is not proof of legitimacy. LokerBuster reviews submitted text or OCR content for common scam indicators; it does not independently verify domains, company registries, or employer identity."
   },
   {
     id: 4,
     question: "Do you save my personal data?",
-    answer: "No. That's the scammers' job. We just need the job description or the link to tell you if you're being hunted."
+    answer: "Submitted text is stored with scan reports, and report data is available through the public community API. Screenshot uploads may also be sent to configured image storage. Do not submit personal or confidential information. The app currently has no per-report privacy or deletion control."
   },
   {
     id: 5,
     question: "Can I report a scam I already found?",
-    answer: "Absolutely. Help us feed the algorithm. Every scam you report helps protect someone else from falling into the same trap. Think of it as digital karma."
+    answer: "You can submit job text or a screenshot for analysis. Scan reports are stored and may be publicly accessible, so remove personal or confidential details first."
   },
   {
     id: 6,
     question: "It says the job is 'Safe,' so I'm good, right?",
-    answer: "'Safe' means we didn't find any known red flags. It doesn't mean you should send them your social security number on day one. Always stay skeptical."
+    answer: "No. A lower risk score only means the model found fewer indicators in the submitted content. Verify the employer independently and never share sensitive information prematurely."
   },
   {
     id: 7,
