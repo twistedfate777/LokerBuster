@@ -115,11 +115,6 @@ function Footer() {
                   <span className="group-hover:translate-x-0.5 transition-transform">Community Threat Ledger</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/login" className="text-gray-400 hover:text-[#1ecfc1] transition-colors inline-flex items-center gap-1.5 group">
-                  <span className="group-hover:translate-x-0.5 transition-transform">Sign In / Register</span>
-                </Link>
-              </li>
             </ul>
           </div>
 

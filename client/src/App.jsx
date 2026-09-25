@@ -11,6 +11,7 @@ import Result from "./pages/Result";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Community from "./pages/Community";
+import GuestRoute from "./components/GuestRoute";
 
 function App() {
   return (
@@ -24,8 +25,22 @@ function App() {
             <Route path="/community" element={<Community />} />
             <Route path="/test" element={<Test />} />
             <Route path="/result" element={<Result />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route
+              path="/login"
+              element={
+                <GuestRoute>
+                  <Login />
+                </GuestRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <GuestRoute>
+                  <Register />
+                </GuestRoute>
+              }
+            />
           </Routes>
         </main>
         <Footer />
